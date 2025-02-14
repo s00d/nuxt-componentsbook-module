@@ -1,0 +1,137 @@
+<template>
+  <div class="componentsbook-container">
+    <!-- Боковая панель с деревом файлов -->
+    <aside class="sidebar">
+      <h2>📄 MD Components</h2>
+      <ul class="file-tree">
+        <TreeItem
+          v-for="(node, index) in fileTree"
+          :key="index"
+          :node="node"
+          :depth="0"
+          :selected-file="`${selectedFile}.stories.vue`"
+          @file-selected="selectFile"
+          @file-button-click="fileButtonClick"
+        />
+      </ul>
+    </aside>
+
+    <!-- Iframe для отображения контента -->
+    <main class="preview">
+      <iframe
+        v-if="selectedFile"
+        :src="`/componentsbook/${selectedFile}`"
+      />
+      <p v-else>
+        Выберите файл
+      </p>
+    </main>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted } from 'vue'
+import TreeItem from './TreeItem.vue'
+
+const fileTree = ref([])
+const selectedFile = ref('')
+
+// Загружаем список файлов и строим дерево
+onMounted(async () => {
+  try {
+    const res = await fetch('/__componentsbook_devtools_api__/api/files')
+    const data = await res.json()
+    if (Array.isArray(data.files)) {
+      fileTree.value = buildFileTree(data.files)
+    }
+  }
+  catch (error) {
+    console.error('[componentsbook] Ошибка загрузки файлов:', error)
+  }
+})
+
+// Формируем дерево файлов
+function buildFileTree(filePaths) {
+  const tree = []
+  const map = {}
+
+  filePaths.forEach((filePath) => {
+    const parts = filePath.split('/')
+    let current = tree
+
+    parts.forEach((part, index) => {
+      if (!map[part]) {
+        const isFile = index === parts.length - 1
+        const node = {
+          name: part.replace(/\.stories.vue$/, ''),
+          fullPath: filePath,
+          isFile,
+          children: isFile ? null : [],
+        }
+        map[part] = node
+        current.push(node)
+      }
+      current = map[part].children
+    })
+  })
+
+  return tree
+}
+
+// Выбор файла -> загружаем в iframe
+const selectFile = (file) => {
+  selectedFile.value = file.replace(/\.stories.vue$/, '').replace(/\/index$/, '')
+}
+
+const fileButtonClick = (file) => {
+  let route = file.replace(/\.stories.vue$/, '').replace(/\/index$/, '')
+  // Убираем 'index', если есть
+  route = route.replace(/\/index$/, '')
+  window.open('/componentsbook/' + route, '_blank')
+}
+
+if (import.meta.client) {
+  const observer = new MutationObserver(() => {
+    const devTools = document.getElementById('nuxt-devtools-container')
+    if (devTools) {
+      console.log('[componentsbook] Удаляем Nuxt DevTools из DOM')
+      devTools.remove()
+      observer.disconnect() // Останавливаем наблюдение после удаления
+    }
+  })
+
+  observer.observe(document.body, { childList: true, subtree: true })
+}
+</script>
+
+<style>
+.componentsbook-container {
+  display: flex;
+  height: 100vh;
+}
+
+.sidebar {
+  width: 250px;
+  border-right: 1px solid #ccc;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.preview {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.file-tree {
+  list-style: none;
+  padding-left: 0;
+}
+</style>
