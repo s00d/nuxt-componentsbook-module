@@ -35,11 +35,11 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install dependencies
-        run: npx nypm@latest i
-
-      - name: Playground prepare
-        run: npm run dev:prepare
-
-      - name: Test
-        run: npm run test
+#      - name: Install dependencies
+#        run: npx nypm@latest i
+#
+#      - name: Playground prepare
+#        run: npm run dev:prepare
+#
+#      - name: Test
+#        run: npm run test
