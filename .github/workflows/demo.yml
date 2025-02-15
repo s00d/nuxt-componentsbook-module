@@ -36,7 +36,9 @@ jobs:
         run: pnpm run dev:prepare && pnpm run prepack
 
       - name: Generate static site
-        run: cd playground && pnpm i && pnpm run generate --filter playground
+        env:
+          NUXT_APP_BASE_URL: '/nuxt-componentsbook-module/'
+        run: cd playground && pnpm i && pnpm run generate
 
       - name: Create .nojekyll file
         run: touch playground/.output/public/.nojekyll
