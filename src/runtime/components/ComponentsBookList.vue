@@ -170,7 +170,6 @@ iframe {
   padding-left: 0;
 }
 
-
 /* Кнопка справа на файлах */
 .file-button {
   margin-left: auto; /* чтобы «прижать» кнопку к правому краю */
@@ -185,5 +184,4 @@ iframe {
   background-color: #e2e8f0;
   border-radius: 4px;
 }
-
 </style>

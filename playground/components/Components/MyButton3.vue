@@ -1,5 +1,8 @@
 <template>
-  <button :class="buttonClass" @click="handleClick">
+  <button
+    :class="buttonClass"
+    @click="handleClick"
+  >
     {{ label }}
   </button>
 </template>

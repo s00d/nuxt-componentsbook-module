@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
 import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
-import type {EventData, PropData} from './extrector'
+import type { EventData, PropData } from './extrector'
 
 export class PropsCacheManager {
   private readonly cache: Record<string, { hash: string, data: { props: PropData[], events: EventData[] } }>

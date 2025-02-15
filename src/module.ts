@@ -81,12 +81,12 @@ export default defineNuxtModule<ComponentsBookOptions>({
           .replace(/<\/script>/g, '<\\/script>') // Защита от закрытия тега <script>
           .replace(/\n/g, '\\n') // Переводы строк
           .replace(/\r/g, '\\r') // Возвраты каретки
-        template = template.replace('${sourceCode}', `\`${escapedContent}\``)
-        template = template.replace('${showSource}', 'true')
+        template = template.replace('\'${sourceCode}\'', `\`${escapedContent}\``)
+        template = template.replace('`${showSource}`', 'true')
       }
       else {
-        template = template.replace('${showSource}', 'false')
-        template = template.replace('${sourceCode}', '')
+        template = template.replace('`${showSource}`', 'false')
+        template = template.replace('\'${sourceCode}\'', '')
       }
 
       if (componentsData.props.length > 0) {

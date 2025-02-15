@@ -21,41 +21,80 @@ const example7 = useCodeGenerator('MyButton', { label: 'Large', size: 'lg' })
 
   <h3>🟢 Simple Button</h3>
   <MyButton label="Click Me" />
-  <CodeBlock :generatedCode="example1.generatedCode" :copyToClipboard="example1.copyToClipboard" />
+  <CodeBlock
+    :generated-code="example1.generatedCode"
+    :copy-to-clipboard="example1.copyToClipboard"
+  />
 
   <h3>🔹 Different Styles</h3>
   <div class="button-group">
     <div>
-      <MyButton label="Primary" variant="primary" />
-      <CodeBlock :generatedCode="example2.generatedCode" :copyToClipboard="example2.copyToClipboard" />
+      <MyButton
+        label="Primary"
+        variant="primary"
+      />
+      <CodeBlock
+        :generated-code="example2.generatedCode"
+        :copy-to-clipboard="example2.copyToClipboard"
+      />
     </div>
 
     <div>
-      <MyButton label="Secondary" variant="secondary" />
-      <CodeBlock :generatedCode="example3.generatedCode" :copyToClipboard="example3.copyToClipboard" />
+      <MyButton
+        label="Secondary"
+        variant="secondary"
+      />
+      <CodeBlock
+        :generated-code="example3.generatedCode"
+        :copy-to-clipboard="example3.copyToClipboard"
+      />
     </div>
 
     <div>
-      <MyButton label="Danger" variant="danger" />
-      <CodeBlock :generatedCode="example4.generatedCode" :copyToClipboard="example4.copyToClipboard" />
+      <MyButton
+        label="Danger"
+        variant="danger"
+      />
+      <CodeBlock
+        :generated-code="example4.generatedCode"
+        :copy-to-clipboard="example4.copyToClipboard"
+      />
     </div>
   </div>
 
   <h3>🔹 Different Sizes</h3>
   <div class="button-group">
     <div>
-      <MyButton label="Small" size="sm" />
-      <CodeBlock :generatedCode="example5.generatedCode" :copyToClipboard="example5.copyToClipboard" />
+      <MyButton
+        label="Small"
+        size="sm"
+      />
+      <CodeBlock
+        :generated-code="example5.generatedCode"
+        :copy-to-clipboard="example5.copyToClipboard"
+      />
     </div>
 
     <div>
-      <MyButton label="Medium" size="md" />
-      <CodeBlock :generatedCode="example6.generatedCode" :copyToClipboard="example6.copyToClipboard" />
+      <MyButton
+        label="Medium"
+        size="md"
+      />
+      <CodeBlock
+        :generated-code="example6.generatedCode"
+        :copy-to-clipboard="example6.copyToClipboard"
+      />
     </div>
 
     <div>
-      <MyButton label="Large" size="lg" />
-      <CodeBlock :generatedCode="example7.generatedCode" :copyToClipboard="example7.copyToClipboard" />
+      <MyButton
+        label="Large"
+        size="lg"
+      />
+      <CodeBlock
+        :generated-code="example7.generatedCode"
+        :copy-to-clipboard="example7.copyToClipboard"
+      />
     </div>
   </div>
 </template>

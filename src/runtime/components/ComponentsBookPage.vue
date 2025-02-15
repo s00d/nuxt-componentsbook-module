@@ -7,33 +7,37 @@
     <StoryComponent />
 
     <details
-      v-if="${showSource}"
+      v-if="`${showSource}`"
       class="code-spoiler"
     >
       <summary>Source code</summary>
-      <pre class="code-block"><code class="highlighted-code" v-text="sourceCode"></code></pre>
+      <pre class="code-block">
+        <code
+          class="highlighted-code"
+          v-text="sourceCode"
+        />
+      </pre>
     </details>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
-import StoryComponent from '${importPath}';
+import { ref } from 'vue'
+import StoryComponent from '${importPath}'
 
-const sourceCode = ref(${sourceCode});
-
+const sourceCode = ref('${sourceCode}')
 
 if (import.meta.client) {
   const observer = new MutationObserver(() => {
-    const devTools = document.getElementById('nuxt-devtools-container');
+    const devTools = document.getElementById('nuxt-devtools-container')
     if (devTools) {
-      console.log('[componentsbook] Удаляем Nuxt DevTools из DOM');
-      devTools.remove();
-      observer.disconnect(); // Останавливаем наблюдение после удаления
+      console.log('[componentsbook] Удаляем Nuxt DevTools из DOM')
+      devTools.remove()
+      observer.disconnect() // Останавливаем наблюдение после удаления
     }
-  });
+  })
 
-  observer.observe(document.body, { childList: true, subtree: true });
+  observer.observe(document.body, { childList: true, subtree: true })
 }
 </script>
 
@@ -46,7 +50,6 @@ if (import.meta.client) {
   line-height: 1.6;
   color: #333;
 }
-
 
 /* Заголовки */
 .componentsbook-page h1,
@@ -137,12 +140,10 @@ if (import.meta.client) {
 
 .componentsbook-page pre code {
   font-family: 'Courier New', monospace;
-  //color: #333;
 }
 
 /* Инлайн-код */
 .componentsbook-page code {
-  //background: #eee;
   color: #eee;
   padding: 2px 4px;
   border-radius: 4px;
