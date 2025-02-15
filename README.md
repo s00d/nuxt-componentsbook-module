@@ -9,6 +9,8 @@
 ## Overview
 This module provides a Storybook-like experience for Nuxt components, allowing you to document and test your Vue components using `.stories.vue` files. It scans a specified directory for story files, generates dynamic routes, and creates an interactive UI for viewing and testing components.
 
+This module serves as a lightweight alternative to Storybook, designed specifically for Nuxt projects. Unlike Storybook, which can be heavy and complex to configure, this module is built with Vue and seamlessly integrates into Nuxt, making setup and usage much simpler. All stories are written using Vue components, ensuring a more intuitive and consistent development experience within your project.
+
 ## Features
 - Automatically scans and registers `.stories.vue` files as pages.
 - Generates Vue files dynamically for each story.
