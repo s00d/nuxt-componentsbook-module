@@ -210,7 +210,7 @@ export default defineNuxtModule<ComponentsBookOptions>({
     })
 
     addServerHandler({
-      route: join(nuxt.options.app.baseURL, '/__componentsbook_devtools_api__/api/files'),
+      route: '/__componentsbook_devtools_api__/api/files',
       handler: resolver.resolve('./runtime/server/api/componentsbook/files'),
       env: ['prod', 'dev'],
     })
