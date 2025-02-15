@@ -32,26 +32,31 @@
     "test:types": "vue-tsc --noEmit && cd playground && vue-tsc --noEmit"
   },
   "dependencies": {
-    "@nuxt/kit": "^3.15.4",
+    "@nuxt/kit": "3.15.4",
+    "chokidar": "^3.6.0",
+    "globby": "^14.0.2",
+    "h3": "^1.10.0",
+    "sirv": "^2.0.4",
+    "ufo": "^1.5.4",
     "vue-docgen-api": "^4.79.2"
   },
   "devDependencies": {
-    "@nuxt/devtools": "^2.0.0",
-    "@nuxt/eslint-config": "^1.0.1",
+    "@nuxt/devtools": "^1.7.0",
+    "@nuxt/eslint-config": "0.7.4",
     "@nuxt/module-builder": "^0.8.4",
-    "@nuxt/schema": "^3.15.4",
+    "@nuxt/schema": "3.15.3",
     "@nuxt/test-utils": "^3.15.4",
     "@types/node": "latest",
     "changelogen": "^0.5.7",
-    "chokidar": "^3.6.0",
     "eslint": "^9.20.1",
-    "globby": "^14.0.2",
-    "nuxt": "^3.15.4",
-    "sirv": "^2.0.4",
-    "typescript": "~5.7.3",
-    "ufo": "^1.5.4",
+    "nuxt": "3.15.3",
+    "typescript": "5.6.3",
     "vitest": "^3.0.5",
     "vue-tsc": "^2.2.0"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.28.1",
+    "@rollup/rollup-win32-x64-msvc": "^4.28.1"
   },
   "packageManager": "pnpm@9.15.4+sha512.b2dc20e2fc72b3e18848459b37359a32064663e5627a51e4c74b2c29dd8e8e0491483c3abb40789cfd578bf362fb6ba8261b05f0387d76792ed6e23ea3b1b6a0"
 }
