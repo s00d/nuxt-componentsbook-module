@@ -1,0 +1,46 @@
+name: Deploy Nuxt Playground to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main  # Основная ветка проекта
+
+  workflow_dispatch:  # Возможность ручного запуска
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build Nuxt playground
+        run: pnpm run prepack
+
+      - name: Generate static site
+        run: cd playground && pnpm i && pnpm run generate --filter playground
+
+      - name: Create .nojekyll file
+        run: touch playground/.output/public/.nojekyll
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: playground/.output/public
