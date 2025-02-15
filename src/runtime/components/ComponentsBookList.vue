@@ -76,8 +76,8 @@ onMounted(async () => {
     const data = await $fetch('/__componentsbook_devtools_api__/api/files', {
       baseURL: baseURL,
     })
-    if (Array.isArray(data.files)) {
-      fileTree.value = buildFileTree(data.files)
+    if (Array.isArray(data)) {
+      fileTree.value = buildFileTree(data)
     }
   }
   catch (error) {

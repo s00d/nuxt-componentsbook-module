@@ -1,7 +1,7 @@
 // src/module.ts
 import { join } from 'node:path'
 import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from 'node:fs'
-import { defineNuxtModule, createResolver, addDevServerHandler, addLayout, addImportsDir, addComponentsDir } from '@nuxt/kit'
+import { defineNuxtModule, createResolver, addDevServerHandler, addServerHandler, addLayout, addImportsDir, addComponentsDir } from '@nuxt/kit'
 import { globby } from 'globby'
 import { watch } from 'chokidar'
 import { eventHandler } from 'h3'
@@ -30,9 +30,6 @@ export default defineNuxtModule<ComponentsBookOptions>({
       return
     }
 
-    nuxt.options.runtimeConfig.componentsComponentsBookConfig = {
-      rootDir: nuxt.options.rootDir,
-    }
 
     const resolver = createResolver(import.meta.url)
     const srcDir = nuxt.options.srcDir
@@ -40,6 +37,11 @@ export default defineNuxtModule<ComponentsBookOptions>({
 
     // Полный путь к папке, где ищем .md
     const fullComponentsDir = resolver.resolve(srcDir, componentsDir!)
+
+    nuxt.options.runtimeConfig.componentsComponentsBookConfig = {
+      rootDir: nuxt.options.rootDir,
+      fullComponentsDir: fullComponentsDir,
+    }
 
     addLayout({
       src: resolver.resolve('./runtime/components/ComponentsBookContainer.vue'),
@@ -195,19 +197,18 @@ export default defineNuxtModule<ComponentsBookOptions>({
       }),
     })
 
-    // === Пример: отдаём JSON /__componentsbook_devtools_api__/api/files
-    addDevServerHandler({
+    addServerHandler({
       route: join(nuxt.options.app.baseURL, '/__componentsbook_devtools_api__/api/files'),
-      handler: eventHandler(async (event) => {
-        const { res } = event.node
+      handler: resolver.resolve('./runtime/server/api/componentsbook/files'),
+    })
 
-        const storyFiles = await globby('**/*.stories.vue', { cwd: fullComponentsDir })
-        const data = {
-          files: storyFiles,
-        }
-        res.setHeader('Content-Type', 'application/json; charset=utf-8')
-        res.end(JSON.stringify(data))
-      }),
+
+    nuxt.hook('nitro:config', (nitroConfig) => {
+      const routes = nitroConfig.prerender?.routes || []
+      routes.push(join(nuxt.options.app.baseURL, '/__componentsbook_devtools_api__/api/files'))
+
+      nitroConfig.prerender = nitroConfig.prerender || {}
+      nitroConfig.prerender.routes = routes
     })
 
     // Регистрируем вкладку DevTools
