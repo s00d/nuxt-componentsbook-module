@@ -44,7 +44,9 @@ jobs:
         run: touch playground/.output/public/.nojekyll
 
       - name: Deploy to GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@v4
+        uses: crazy-max/ghaction-github-pages@v4
         with:
-          branch: gh-pages
-          folder: playground/.output/public
+          target_branch: gh-pages
+          build_dir: playground/.output/public
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

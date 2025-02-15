@@ -51,7 +51,7 @@
     <main class="preview">
       <iframe
         v-if="selectedFile"
-        :src="`/componentsbook/${selectedFile}`"
+        :src="getIframeUrl(selectedFile)"
       />
       <p v-else>
         Change file
@@ -115,6 +115,10 @@ function buildFileTree(filePaths) {
 
 const handleClick = () => {
   window.open(`${baseURL}/componentsbook/`, '_blank')
+}
+
+const getIframeUrl = (selectedFile) => {
+  return `${baseURL}/componentsbook/${selectedFile}`
 }
 
 // Выбор файла -> загружаем в iframe
