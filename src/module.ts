@@ -9,7 +9,7 @@ import {
   addLayout,
   addImportsDir,
   addComponentsDir,
-  extendPages, addPrerenderRoutes
+  addPrerenderRoutes,
 } from '@nuxt/kit'
 import { globby } from 'globby'
 import { watch } from 'chokidar'
@@ -215,13 +215,7 @@ export default defineNuxtModule<ComponentsBookOptions>({
       env: ['prod', 'dev'],
     })
 
-    nuxt.hook('nitro:config', (nitroConfig) => {
-      const routes = nitroConfig.prerender?.routes || []
-      routes.push(join(nuxt.options.app.baseURL, '/__componentsbook_devtools_api__/api/files'))
-
-      nitroConfig.prerender = nitroConfig.prerender || {}
-      nitroConfig.prerender.routes = routes
-    })
+    addPrerenderRoutes('/__componentsbook_devtools_api__/api/files')
 
     // nuxt.hook('prerender:routes', async (prerenderRoutes) => {
     //   const routesSet = prerenderRoutes.routes
