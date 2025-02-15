@@ -139,6 +139,12 @@ if (import.meta.client) {
 }
 
 .componentsbook-page pre code {
+  display: block;
+  padding: 0;
+  margin: 0;
+}
+
+.componentsbook-page pre code {
   font-family: 'Courier New', monospace;
 }
 
