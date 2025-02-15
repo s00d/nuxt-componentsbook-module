@@ -55,8 +55,6 @@ export default defineNuxtModule<ComponentsBookOptions>({
       absolute: true,
     })
 
-    const generatedComponents: string[] = []
-
     async function generateVueForStory(filePath: string) {
       const relativePath = filePath.substring(fullComponentsDir.length + 1).replace(/\.stories\.vue$/, '')
       const importPath = `@/${componentsDir}/${relativePath}.stories.vue`
@@ -84,10 +82,10 @@ export default defineNuxtModule<ComponentsBookOptions>({
           .replace(/\n/g, '\\n') // Переводы строк
           .replace(/\r/g, '\\r') // Возвраты каретки
         template = template.replace('${sourceCode}', `\`${escapedContent}\``)
-        template = template.replace('${showSource}', true)
+        template = template.replace('${showSource}', 'true')
       }
       else {
-        template = template.replace('${showSource}', false)
+        template = template.replace('${showSource}', 'false')
         template = template.replace('${sourceCode}', '')
       }
 
@@ -113,8 +111,7 @@ export default defineNuxtModule<ComponentsBookOptions>({
     }
 
     for (const filePath of storyFiles) {
-      const vueFile = await generateVueForStory(filePath)
-      generatedComponents.push(vueFile)
+      await generateVueForStory(filePath)
     }
 
     // ======================================================
@@ -154,14 +151,14 @@ export default defineNuxtModule<ComponentsBookOptions>({
       const watcher = watch('**/*.stories.vue', { cwd: fullComponentsDir, ignoreInitial: true })
 
       watcher.on('add', async (file) => {
-        console.log(`[componentsbook] Новый файл: ${file}`)
+        console.log(`[componentsbook] new file: ${file}`)
+
         const newFullPath = join(fullComponentsDir, file)
-        const vueFile = await generateVueForStory(newFullPath)
-        generatedComponents.push(vueFile)
+        await generateVueForStory(newFullPath)
       })
 
       watcher.on('unlink', (file) => {
-        console.log(`[componentsbook] Файл удалён: ${file}`)
+        console.log(`[componentsbook] file remove: ${file}`)
         const relativePath = file.substring(fullComponentsDir.length + 1).replace(/\.stories\.vue$/, '')
         const vueFile = join(__dirname, '.cache', `${relativePath.replace(/\//g, '_')}.vue`)
         if (existsSync(vueFile)) {
@@ -176,7 +173,7 @@ export default defineNuxtModule<ComponentsBookOptions>({
 
     addImportsDir(resolver.resolve('./runtime/composables'))
 
-    await addComponentsDir({
+    addComponentsDir({
       path: resolver.resolve('./runtime/components_client'),
       pathPrefix: false,
       extensions: ['vue'],
