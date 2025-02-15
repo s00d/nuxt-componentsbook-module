@@ -73,7 +73,7 @@ const selectedFile = ref('')
 // Загружаем список файлов и строим дерево
 onMounted(async () => {
   try {
-    const data = await $fetch('/__componentsbook_devtools_api__/api/files', {
+    const data = await $fetch('/__componentsbook_devtools_api__/api/files.json', {
       baseURL: baseURL,
     })
     if (Array.isArray(data)) {

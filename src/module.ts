@@ -210,12 +210,12 @@ export default defineNuxtModule<ComponentsBookOptions>({
     })
 
     addServerHandler({
-      route: '/__componentsbook_devtools_api__/api/files',
+      route: '/__componentsbook_devtools_api__/api/files.json',
       handler: resolver.resolve('./runtime/server/api/componentsbook/files'),
       env: ['prod', 'dev'],
     })
 
-    addPrerenderRoutes('/__componentsbook_devtools_api__/api/files')
+    addPrerenderRoutes('/__componentsbook_devtools_api__/api/files.json')
 
     // nuxt.hook('prerender:routes', async (prerenderRoutes) => {
     //   const routesSet = prerenderRoutes.routes
