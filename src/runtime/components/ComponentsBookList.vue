@@ -54,7 +54,7 @@
         :src="`/componentsbook/${selectedFile}`"
       />
       <p v-else>
-        Выберите файл
+        Change file
       </p>
     </main>
   </div>

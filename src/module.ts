@@ -1,7 +1,16 @@
 // src/module.ts
 import { join } from 'node:path'
 import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from 'node:fs'
-import { defineNuxtModule, createResolver, addDevServerHandler, addServerHandler, addLayout, addImportsDir, addComponentsDir } from '@nuxt/kit'
+import {
+  defineNuxtModule,
+  createResolver,
+  addDevServerHandler,
+  addServerHandler,
+  addLayout,
+  addImportsDir,
+  addComponentsDir,
+  extendPages, addPrerenderRoutes
+} from '@nuxt/kit'
 import { globby } from 'globby'
 import { watch } from 'chokidar'
 import { eventHandler } from 'h3'
@@ -29,7 +38,6 @@ export default defineNuxtModule<ComponentsBookOptions>({
     if (options.disabled) {
       return
     }
-
 
     const resolver = createResolver(import.meta.url)
     const srcDir = nuxt.options.srcDir
@@ -133,6 +141,8 @@ export default defineNuxtModule<ComponentsBookOptions>({
             layout: `componentsbook-layout`,
           },
         })
+
+        addPrerenderRoutes(routePath)
       }
 
       const containerComponent = resolver.resolve('./runtime/components/ComponentsBookList.vue')
@@ -144,6 +154,8 @@ export default defineNuxtModule<ComponentsBookOptions>({
           disableDevTools: true,
         },
       })
+
+      addPrerenderRoutes('/componentsbook')
     })
 
     // ======================================================
@@ -200,8 +212,8 @@ export default defineNuxtModule<ComponentsBookOptions>({
     addServerHandler({
       route: join(nuxt.options.app.baseURL, '/__componentsbook_devtools_api__/api/files'),
       handler: resolver.resolve('./runtime/server/api/componentsbook/files'),
+      env: ['prod', 'dev'],
     })
-
 
     nuxt.hook('nitro:config', (nitroConfig) => {
       const routes = nitroConfig.prerender?.routes || []
@@ -210,6 +222,11 @@ export default defineNuxtModule<ComponentsBookOptions>({
       nitroConfig.prerender = nitroConfig.prerender || {}
       nitroConfig.prerender.routes = routes
     })
+
+    // nuxt.hook('prerender:routes', async (prerenderRoutes) => {
+    //   const routesSet = prerenderRoutes.routes
+    //   routesSet.add(join(nuxt.options.app.baseURL, '/__componentsbook_devtools_api__/api/files'))
+    // })
 
     // Регистрируем вкладку DevTools
     nuxt.hook('devtools:customTabs', (tabs) => {
