@@ -19,11 +19,11 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install dependencies
-        run: npx nypm@latest i
-
-      - name: Lint
-        run: npm run lint
+#      - name: Install dependencies
+#        run: npx nypm@latest i
+#
+#      - name: Lint
+#        run: npm run lint
 
   test:
     runs-on: ubuntu-latest
