@@ -73,10 +73,9 @@ const selectedFile = ref('')
 // Загружаем список файлов и строим дерево
 onMounted(async () => {
   try {
-    const res = await fetch('/__componentsbook_devtools_api__/api/files', {
+    const data = await $fetch('/__componentsbook_devtools_api__/api/files', {
       baseURL: baseURL,
     })
-    const data = await res.json()
     if (Array.isArray(data.files)) {
       fileTree.value = buildFileTree(data.files)
     }
