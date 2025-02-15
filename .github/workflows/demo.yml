@@ -29,14 +29,11 @@ jobs:
           node-version: 20
           cache: 'pnpm'
 
-      - name: Install pnpm
-        run: npm install -g pnpm
-
       - name: Install dependencies
         run: pnpm install
 
       - name: Build Nuxt playground
-        run: pnpm run prepack
+        run: pnpm run dev:prepare && pnpm run prepack
 
       - name: Generate static site
         run: cd playground && pnpm i && pnpm run generate --filter playground
