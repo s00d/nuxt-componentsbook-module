@@ -6,10 +6,17 @@
 
 # Components Book Module for Nuxt
 
+
+![header](https://github.com/s00d/nuxt-componentsbook-module/blob/main/images/header.jpg?raw=true)
+
 ## Overview
 This module provides a Storybook-like experience for Nuxt components, allowing you to document and test your Vue components using `.stories.vue` files. It scans a specified directory for story files, generates dynamic routes, and creates an interactive UI for viewing and testing components.
 
 This module serves as a lightweight alternative to Storybook, designed specifically for Nuxt projects. Unlike Storybook, which can be heavy and complex to configure, this module is built with Vue and seamlessly integrates into Nuxt, making setup and usage much simpler. All stories are written using Vue components, ensuring a more intuitive and consistent development experience within your project.
+
+![img1](https://github.com/s00d/nuxt-componentsbook-module/blob/main/images/img1.gif?raw=true)
+
+![img2](https://github.com/s00d/nuxt-componentsbook-module/blob/main/images/img2.gif?raw=true)
 
 ## Features
 - Automatically scans and registers `.stories.vue` files as pages.
