@@ -36,14 +36,11 @@
     "vue-docgen-api": "^4.79.2"
   },
   "devDependencies": {
-    "@babel/parser": "^7.26.9",
-    "@babel/traverse": "^7.26.9",
     "@nuxt/devtools": "^2.0.0",
     "@nuxt/eslint-config": "^1.0.1",
     "@nuxt/module-builder": "^0.8.4",
     "@nuxt/schema": "^3.15.4",
     "@nuxt/test-utils": "^3.15.4",
-    "@types/babel-traverse": "^6.25.10",
     "@types/node": "latest",
     "changelogen": "^0.5.7",
     "chokidar": "^3.6.0",

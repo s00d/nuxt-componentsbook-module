@@ -2,29 +2,42 @@
   <div class="componentsbook-page">
     <div>
       ${propsTable}
+      ${eventsTable}
     </div>
     <StoryComponent />
+
+    <details
+      v-if="${showSource}"
+      class="code-spoiler"
+    >
+      <summary>Source code</summary>
+      <pre class="code-block"><code class="highlighted-code" v-text="sourceCode"></code></pre>
+    </details>
   </div>
 </template>
 
 <script setup>
-import StoryComponent from '${importPath}'
+import { ref, computed } from 'vue';
+import StoryComponent from '${importPath}';
+
+const sourceCode = ref(${sourceCode});
+
 
 if (import.meta.client) {
   const observer = new MutationObserver(() => {
-    const devTools = document.getElementById('nuxt-devtools-container')
+    const devTools = document.getElementById('nuxt-devtools-container');
     if (devTools) {
-      console.log('[componentsbook] Удаляем Nuxt DevTools из DOM')
-      devTools.remove()
-      observer.disconnect() // Останавливаем наблюдение после удаления
+      console.log('[componentsbook] Удаляем Nuxt DevTools из DOM');
+      devTools.remove();
+      observer.disconnect(); // Останавливаем наблюдение после удаления
     }
-  })
+  });
 
-  observer.observe(document.body, { childList: true, subtree: true })
+  observer.observe(document.body, { childList: true, subtree: true });
 }
 </script>
 
-<style>
+<style scoped>
 .componentsbook-page {
   max-width: 800px;
   margin: 0 auto;
@@ -33,6 +46,7 @@ if (import.meta.client) {
   line-height: 1.6;
   color: #333;
 }
+
 
 /* Заголовки */
 .componentsbook-page h1,
@@ -109,24 +123,27 @@ if (import.meta.client) {
 
 /* Светлая тема для блока кода */
 .componentsbook-page pre {
-  background: #f5f5f5; /* Светло-серый фон */
-  color: #333; /* Тёмный текст */
+  background: #2d2d2d;
+  color: #f8f8f2;
   padding: 15px;
   border-radius: 5px;
   overflow-x: auto;
   font-size: 14px;
-  border: 1px solid #ddd;
+  border: 1px solid #444;
+  font-family: 'Courier New', monospace;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .componentsbook-page pre code {
   font-family: 'Courier New', monospace;
-  color: #333;
+  //color: #333;
 }
 
 /* Инлайн-код */
 .componentsbook-page code {
-  background: #eee;
-  color: #222;
+  //background: #eee;
+  color: #eee;
   padding: 2px 4px;
   border-radius: 4px;
   font-family: 'Courier New', monospace;
@@ -160,5 +177,24 @@ if (import.meta.client) {
 .componentsbook-page th {
   background: #f4f4f4;
   font-weight: bold;
+}
+
+/* Спойлер с кодом */
+.code-spoiler {
+  margin-top: 20px;
+  background: #f9f9f9;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+}
+
+.code-spoiler summary {
+  cursor: pointer;
+  font-weight: bold;
+  color: #007bff;
+}
+
+.code-spoiler summary:hover {
+  text-decoration: underline;
 }
 </style>

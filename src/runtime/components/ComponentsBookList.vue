@@ -2,7 +2,38 @@
   <div class="componentsbook-container">
     <!-- Боковая панель с деревом файлов -->
     <aside class="sidebar">
-      <h2>📄 MD Components</h2>
+      <h2>
+        📄 Components
+        <button
+          class="file-button"
+          @click.stop="handleClick"
+        >
+          <svg
+            class="icon"
+            viewBox="0 0 24 24"
+          >
+            <!-- Пример иконки троеточия -->
+            <circle
+              cx="5"
+              cy="12"
+              r="2"
+              fill="currentColor"
+            />
+            <circle
+              cx="12"
+              cy="12"
+              r="2"
+              fill="currentColor"
+            />
+            <circle
+              cx="19"
+              cy="12"
+              r="2"
+              fill="currentColor"
+            />
+          </svg>
+        </button>
+      </h2>
       <ul class="file-tree">
         <TreeItem
           v-for="(node, index) in fileTree"
@@ -78,6 +109,10 @@ function buildFileTree(filePaths) {
   return tree
 }
 
+const handleClick = () => {
+  window.open('/componentsbook/', '_blank')
+}
+
 // Выбор файла -> загружаем в iframe
 const selectFile = (file) => {
   selectedFile.value = file.replace(/\.stories.vue$/, '').replace(/\/index$/, '')
@@ -134,4 +169,21 @@ iframe {
   list-style: none;
   padding-left: 0;
 }
+
+
+/* Кнопка справа на файлах */
+.file-button {
+  margin-left: auto; /* чтобы «прижать» кнопку к правому краю */
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 4px;
+  width: 26px;
+}
+
+.file-button:hover {
+  background-color: #e2e8f0;
+  border-radius: 4px;
+}
+
 </style>

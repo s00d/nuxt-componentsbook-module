@@ -1,23 +1,19 @@
 // src/module.ts
 import { join } from 'node:path'
 import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from 'node:fs'
-import { defineNuxtModule, createResolver, addDevServerHandler, addLayout } from '@nuxt/kit'
+import { defineNuxtModule, createResolver, addDevServerHandler, addLayout, addImportsDir, addComponentsDir } from '@nuxt/kit'
 import { globby } from 'globby'
 import { watch } from 'chokidar'
 import { eventHandler } from 'h3'
-import type { PropData } from './extrector'
-import { extractComponentData, generatePropsTable } from './extrector'
+import type { EventData, PropData } from './extrector'
+import { extractComponentData, generateEventsTable, generatePropsTable } from './extrector'
 
 export interface ComponentsBookOptions {
   /**
    * Папка, в которой ищем .md-файлы
    */
   componentsDir?: string
-  /**
-   * Префикс для роутов
-   * @default "/componentsbook"
-   */
-  routePrefix?: string
+  disabled?: boolean
 }
 
 export default defineNuxtModule<ComponentsBookOptions>({
@@ -27,16 +23,20 @@ export default defineNuxtModule<ComponentsBookOptions>({
   },
   defaults: {
     componentsDir: 'components',
-    routePrefix: '/componentsbook',
+    disabled: false,
   },
   async setup(options, nuxt) {
+    if (options.disabled) {
+      return
+    }
+
     nuxt.options.runtimeConfig.componentsComponentsBookConfig = {
       rootDir: nuxt.options.rootDir,
     }
 
     const resolver = createResolver(import.meta.url)
     const srcDir = nuxt.options.srcDir
-    const { componentsDir, routePrefix } = options
+    const { componentsDir } = options
 
     // Полный путь к папке, где ищем .md
     const fullComponentsDir = resolver.resolve(srcDir, componentsDir!)
@@ -70,18 +70,41 @@ export default defineNuxtModule<ComponentsBookOptions>({
       const pagePath = resolver.resolve('./runtime/components/ComponentsBookPage.vue')
       let template = readFileSync(pagePath, 'utf-8').replace('${importPath}', importPath)
 
-      let propsData: PropData[] = []
+      let componentsData: { props: PropData[], events: EventData[] } = { props: [], events: [] }
       const componentPath = join(fullComponentsDir, `${relativePath}.vue`)
       if (existsSync(componentPath)) {
-        propsData = await extractComponentData(componentPath)
+        componentsData = await extractComponentData(componentPath)
+
+        const fileContent = readFileSync(componentPath, 'utf-8')
+        const escapedContent = fileContent
+          .replace(/\\/g, '\\\\') // Экранируем обратные слэши
+          .replace(/`/g, '\\`') // Экранируем обратные кавычки
+          .replace(/\$/g, '\\$') // Экранируем знак доллара (для `${}`)
+          .replace(/<\/script>/g, '<\\/script>') // Защита от закрытия тега <script>
+          .replace(/\n/g, '\\n') // Переводы строк
+          .replace(/\r/g, '\\r') // Возвраты каретки
+        template = template.replace('${sourceCode}', `\`${escapedContent}\``)
+        template = template.replace('${showSource}', true)
+      }
+      else {
+        template = template.replace('${showSource}', false)
+        template = template.replace('${sourceCode}', '')
       }
 
-      if (propsData.length > 0) {
-        const propsTable = generatePropsTable(propsData)
+      if (componentsData.props.length > 0) {
+        const propsTable = generatePropsTable(componentsData.props)
         template = template.replace('${propsTable}', propsTable)
       }
       else {
         template = template.replace('${propsTable}', '')
+      }
+
+      if (componentsData.events.length > 0) {
+        const eventsTable = generateEventsTable(componentsData.events)
+        template = template.replace('${eventsTable}', eventsTable)
+      }
+      else {
+        template = template.replace('${eventsTable}', '')
       }
 
       writeFileSync(vueFilePath, template)
@@ -100,7 +123,7 @@ export default defineNuxtModule<ComponentsBookOptions>({
     nuxt.hook('pages:extend', (pages) => {
       for (const filePath of storyFiles) {
         const relativePath = filePath.substring(fullComponentsDir.length + 1).replace(/\.stories\.vue$/, '')
-        const routePath = `${routePrefix}/${relativePath}`
+        const routePath = `/componentsbook/${relativePath}`
         const vueFile = join(__dirname, '.cache', `${relativePath.replace(/\//g, '_')}.vue`)
 
         pages.push({
@@ -150,6 +173,14 @@ export default defineNuxtModule<ComponentsBookOptions>({
         await watcher.close()
       })
     }
+
+    addImportsDir(resolver.resolve('./runtime/composables'))
+
+    await addComponentsDir({
+      path: resolver.resolve('./runtime/components_client'),
+      pathPrefix: false,
+      extensions: ['vue'],
+    })
 
     // ======================================================
     // 4. DevTools-вкладка с iframe
