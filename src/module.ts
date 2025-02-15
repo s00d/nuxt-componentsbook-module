@@ -186,7 +186,7 @@ export default defineNuxtModule<ComponentsBookOptions>({
     // которая будет отображаться в iframe во вкладке DevTools.
     // Потом внутри этой страницы используем JS, чтобы fetch'ить список .md.
     addDevServerHandler({
-      route: '/__componentsbook_devtools__',
+      route: join(nuxt.options.app.baseURL, '/__componentsbook_devtools__'),
       handler: eventHandler((event) => {
         const { res } = event.node
         const htmlPath = resolver.resolve('./runtime/devtools/index.html')
@@ -197,7 +197,7 @@ export default defineNuxtModule<ComponentsBookOptions>({
 
     // === Пример: отдаём JSON /__componentsbook_devtools_api__/api/files
     addDevServerHandler({
-      route: '/__componentsbook_devtools_api__/api/files',
+      route: join(nuxt.options.app.baseURL, '/__componentsbook_devtools_api__/api/files'),
       handler: eventHandler(async (event) => {
         const { res } = event.node
 
@@ -217,7 +217,7 @@ export default defineNuxtModule<ComponentsBookOptions>({
         title: 'Components book',
         icon: 'mdi:book-open-page-variant',
         // view: iframe
-        view: { type: 'iframe', src: '/__componentsbook_devtools__' },
+        view: { type: 'iframe', src: join(nuxt.options.app.baseURL, '/__componentsbook_devtools__') },
       })
     })
   },

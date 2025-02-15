@@ -61,8 +61,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
 import TreeItem from './TreeItem.vue'
+
+const config = useRuntimeConfig()
+
+const baseURL = config.app.baseURL.replace(/\/$/, '')
 
 const fileTree = ref([])
 const selectedFile = ref('')
@@ -70,7 +73,9 @@ const selectedFile = ref('')
 // Загружаем список файлов и строим дерево
 onMounted(async () => {
   try {
-    const res = await fetch('/__componentsbook_devtools_api__/api/files')
+    const res = await fetch('/__componentsbook_devtools_api__/api/files', {
+      baseURL: baseURL,
+    })
     const data = await res.json()
     if (Array.isArray(data.files)) {
       fileTree.value = buildFileTree(data.files)
@@ -110,7 +115,7 @@ function buildFileTree(filePaths) {
 }
 
 const handleClick = () => {
-  window.open('/componentsbook/', '_blank')
+  window.open(`${baseURL}/componentsbook/`, '_blank')
 }
 
 // Выбор файла -> загружаем в iframe
@@ -122,7 +127,7 @@ const fileButtonClick = (file) => {
   let route = file.replace(/\.stories.vue$/, '').replace(/\/index$/, '')
   // Убираем 'index', если есть
   route = route.replace(/\/index$/, '')
-  window.open('/componentsbook/' + route, '_blank')
+  window.open(`${baseURL}/componentsbook/${route}`, '_blank')
 }
 
 if (import.meta.client) {
