@@ -1,6 +1,6 @@
 {
   "name": "nuxt-componentsbook-module",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "This module provides a Storybook-like experience for Nuxt components",
   "repository": "s00d/nuxt-componentsbook-module",
   "license": "MIT",
