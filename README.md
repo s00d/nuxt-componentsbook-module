@@ -51,6 +51,7 @@ export default defineNuxtConfig({
   componentsBook: {
     componentsDir: 'components', // Directory where `.stories.vue` files are located
     disabled: false,
+    cache: true,
   },
 })
 ```
@@ -74,7 +75,7 @@ Create a `.stories.vue` file in your components directory:
   const helperText = ref('This is a helper text.')
   const size = ref<'sm' | 'md' | 'lg'>('md')
 
-  const { generatedCode, copyToClipboard } = useCodeGenerator('CustomInput', {
+  const { generatedCode, copyToClipboard } = useCodeGenerator(CustomInput, {
     id: 'input',
     'v-model': modelValue,
     label,
@@ -156,6 +157,68 @@ Create a `.stories.vue` file in your components directory:
 </template>
 ```
 
+### Using `renderedComponent` for Simpler Embedding
+
+In addition to returning only `generatedCode` and `copyToClipboard`, you can have `useCodeGenerator` return a special `renderedComponent`. This allows you to embed your component dynamically via `<component :is="renderedComponent" />`. Below is an **example of how to modify** your `.stories.vue` file to use the `renderedComponent` approach:
+
+```diff
+<script setup lang="ts">
+import { ref } from 'vue'
+import CustomInput from './MyInput.vue'
+import { useCodeGenerator } from '#imports'
+
+const modelValue = ref('')
+const label = ref('Enter Text')
+const type = ref<'text' | 'password' | 'email' | 'number'>('text')
+const placeholder = ref('Type something...')
+const disabled = ref(false)
+const readonly = ref(false)
+const helperText = ref('This is a helper text.')
+const size = ref<'sm' | 'md' | 'lg'>('md')
+
+- // Previously:
+- // const { generatedCode, copyToClipboard } = useCodeGenerator('CustomInput', { ... })
+
++ // Now:
++ const { renderedComponent, generatedCode, copyToClipboard } = useCodeGenerator(CustomInput, {
++   'id': 'input',
++   'v-model': modelValue,
++   label,
++   type,
++   placeholder,
++   disabled,
++   readonly,
++   'helper-text': helperText,
++   size,
++ })
+</script>
+
+<template>
+  ...
+  <h2>🔹 Preview</h2>
+- <CustomInput
+-   id="input"
+-   v-model="modelValue"
+-   :label="label"
+-   :type="type"
+-   :placeholder="placeholder"
+-   :disabled="disabled"
+-   :readonly="readonly"
+-   :helper-text="helperText"
+-   :size="size"
+- />
++ <component :is="renderedComponent" />
+
+  <h2>📋 Generated Code</h2>
+  <CodeBlock
+    :generated-code="generatedCode"
+    :copy-to-clipboard="copyToClipboard"
+  />
+</template>
+```
+
+> **Note**: Using `renderedComponent` is a convenient way to embed the component in a single line. However, this approach is more limited when dealing with advanced use cases—like complex slot usage or additional wrapper logic. In those scenarios, you may find the **previous, direct approach** (`<CustomInput ... />`) to be more flexible and better suited to your needs.
+
 ### 3. Running the Components Book
 Start your Nuxt development server:
 
@@ -179,11 +242,6 @@ Visit `/componentsbook` in your browser to see the list of stories.
 
 ## 🛠 **DevTools Integration**
 When running in development mode, a new DevTools tab called **Components Book** is available, providing an iframe-based UI to explore component stories.
-
----
-
-## 📡 **API Endpoints**
-- `GET /__componentsbook_devtools_api__/api/files`: Returns a JSON list of available story files.
 
 ---
 

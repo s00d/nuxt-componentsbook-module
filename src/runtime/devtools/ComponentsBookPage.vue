@@ -1,8 +1,78 @@
 <template>
   <div class="componentsbook-page">
     <div>
-      ${propsTable}
-      ${eventsTable}
+      <h1>🟢 ${name} Component</h1>
+
+      <div v-if="propsData.length">
+        <h2>🔹 Props</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Prop</th>
+              <th>Type</th>
+              <th>Required</th>
+              <th>Default Value</th>
+              <th>Validator</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="(prop, key) in propsData"
+              :key="key"
+            >
+              <td><b v-text="prop.name" /></td>
+              <td v-text="prop.type ?? 'N/A'" />
+              <td v-text="prop.required ? '✅ Yes' : '❌ No'" />
+              <td v-text="prop.defaultValue ?? 'N/A'" />
+              <td v-text="prop.validator ?? 'None'" />
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div v-if="eventsData.length">
+        <h2>🔹 Events</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Prop</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="(event, key) in eventsData"
+              :key="key"
+            >
+              <td><b v-text="event.name" /></td>
+              <td v-text="event.description ?? 'N/A'" />
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div v-if="slotsData.length">
+        <h2>🔹 Slots</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Slot</th>
+              <th>Description</th>
+              <th>Bindings</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="(slot, key) in slotsData"
+              :key="key"
+            >
+              <td><b v-text="slot.name" /></td>
+              <td v-text="slot.description ?? 'N/A'" />
+              <td v-text="slot.bindings ?? 'N/A'" />
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
     <StoryComponent />
 
@@ -24,6 +94,11 @@
 <script setup>
 import StoryComponent from '${importPath}'
 
+const propsData = ref('${propsData}')
+const eventsData = ref('${eventsData}')
+const slotsData = ref('${slotsData}')
+
+const showSource = ref('${showSource}')
 const sourceCode = ref('${sourceCode}')
 
 if (import.meta.client) {

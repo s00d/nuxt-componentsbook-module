@@ -1,20 +1,20 @@
-import { join, relative, dirname, basename } from 'node:path'
-import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from 'node:fs'
+import { basename, dirname, join, relative } from 'node:path'
+import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs'
 import {
-  defineNuxtModule,
-  createResolver,
-  addDevServerHandler,
-  addLayout,
-  addImportsDir,
   addComponentsDir,
+  addDevServerHandler,
+  addImportsDir,
+  addLayout,
   addPrerenderRoutes,
+  createResolver,
+  defineNuxtModule,
 } from '@nuxt/kit'
 import { globby } from 'globby'
 import type { FSWatcher } from 'chokidar'
 import { watch } from 'chokidar'
 import { eventHandler } from 'h3'
-import type { EventData, PropData } from './extrector'
-import { extractComponentData, generateEventsTable, generatePropsTable } from './extrector'
+import type { EventData, PropData, SlotData } from './extrector'
+import { extractComponentData } from './extrector'
 
 export interface ComponentsBookOptions {
   /**
@@ -22,6 +22,7 @@ export interface ComponentsBookOptions {
    */
   componentsDir?: string
   disabled?: boolean
+  cache?: boolean
 }
 
 export default defineNuxtModule<ComponentsBookOptions>({
@@ -32,6 +33,7 @@ export default defineNuxtModule<ComponentsBookOptions>({
   defaults: {
     componentsDir: 'components',
     disabled: false,
+    cache: true,
   },
   async setup(options, nuxt) {
     if (options.disabled) {
@@ -119,11 +121,12 @@ export default defineNuxtModule<ComponentsBookOptions>({
       let template = readFileSync(pagePath, 'utf-8')
 
       // Делам относительный импорт, чтобы избежать alias
-      const relImport = relative(dirname(vueFilePath), absolutePath).replace(/\\/g, '/')
-      let importPath = relImport
+      let importPath = relative(dirname(vueFilePath), absolutePath).replace(/\\/g, '/')
       if (!importPath.startsWith('.')) {
         importPath = './' + importPath
       }
+
+      template = template.replace('${name}', basename(importPath).replace('.stories.vue', ''))
       template = template.replace('${importPath}', importPath)
 
       // Если есть основной компонент (без .stories.vue)
@@ -133,10 +136,10 @@ export default defineNuxtModule<ComponentsBookOptions>({
       )
       const mainAbsolute = join(rootDirOfLayer, noExt + '.vue')
 
-      let componentsData: { props: PropData[], events: EventData[] } = { props: [], events: [] }
+      let componentsData: { props: PropData[], events: EventData[], slots: SlotData[] } = { props: [], events: [], slots: [] }
       if (existsSync(mainAbsolute)) {
         // extract props, events
-        componentsData = await extractComponentData(mainAbsolute)
+        componentsData = await extractComponentData(mainAbsolute, options.cache!)
 
         // подставляем исходный код
         const fileContent = readFileSync(mainAbsolute, 'utf-8')
@@ -149,30 +152,16 @@ export default defineNuxtModule<ComponentsBookOptions>({
           .replace(/\r/g, '\\r')
 
         template = template.replace('\'${sourceCode}\'', `\`${escapedContent}\``)
-        template = template.replace('`${showSource}`', 'true')
+        template = template.replace('\'${showSource}\'', 'true')
       }
       else {
-        template = template.replace('`${showSource}`', 'false')
+        template = template.replace('\'${showSource}\'', 'false')
         template = template.replace('\'${sourceCode}\'', '')
       }
 
-      // propsTable
-      if (componentsData.props.length > 0) {
-        const propsTable = generatePropsTable(componentsData.props)
-        template = template.replace('${propsTable}', propsTable)
-      }
-      else {
-        template = template.replace('${propsTable}', '')
-      }
-
-      // eventsTable
-      if (componentsData.events.length > 0) {
-        const eventsTable = generateEventsTable(componentsData.events)
-        template = template.replace('${eventsTable}', eventsTable)
-      }
-      else {
-        template = template.replace('${eventsTable}', '')
-      }
+      template = template.replace('\'${propsData}\'', JSON.stringify(componentsData.props))
+      template = template.replace('\'${eventsData}\'', JSON.stringify(componentsData.events))
+      template = template.replace('\'${slotsData}\'', JSON.stringify(componentsData.slots))
 
       writeFileSync(vueFilePath, template)
     }
@@ -249,6 +238,12 @@ export default defineNuxtModule<ComponentsBookOptions>({
         const watcher = watch('**/*.stories.vue', {
           cwd: componentsRoot,
           ignoreInitial: true,
+        })
+
+        watcher.on('change', async (file) => {
+          const abs = join(componentsRoot, file)
+          const story: StoryFile = { layerName, absolutePath: abs, relativePath: file }
+          await generateVueForStory(story)
         })
 
         watcher.on('add', async (file) => {

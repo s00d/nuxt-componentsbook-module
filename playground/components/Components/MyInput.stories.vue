@@ -12,7 +12,7 @@ const readonly = ref(false)
 const helperText = ref('This is a helper text.')
 const size = ref<'sm' | 'md' | 'lg'>('md')
 
-const { generatedCode, copyToClipboard } = useCodeGenerator('CustomInput', {
+const { renderedComponent, generatedCode, copyToClipboard } = useCodeGenerator(CustomInput, {
   'id': 'input',
   'v-model': modelValue,
   label,
@@ -26,7 +26,6 @@ const { generatedCode, copyToClipboard } = useCodeGenerator('CustomInput', {
 </script>
 
 <template>
-  <h1>🟢 CustomInput Component</h1>
   <p>
     The <code>CustomInput</code> component is a versatile input field with multiple configurations.
   </p>
@@ -92,17 +91,7 @@ const { generatedCode, copyToClipboard } = useCodeGenerator('CustomInput', {
   </div>
 
   <h2>🔹 Preview</h2>
-  <CustomInput
-    id="input"
-    v-model="modelValue"
-    :label="label"
-    :type="type"
-    :placeholder="placeholder"
-    :disabled="disabled"
-    :readonly="readonly"
-    :helper-text="helperText"
-    :size="size"
-  />
+  <component :is="renderedComponent" />
 
   <h2>📋 Generated Code</h2>
   <CodeBlock

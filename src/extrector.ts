@@ -16,70 +16,20 @@ export interface EventData {
   description: string
 }
 
-export function generatePropsTable(props: PropData[]): string {
-  let table = `
-    <h2>🔹 Props</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Prop</th>
-          <th>Type</th>
-          <th>Required</th>
-          <th>Default Value</th>
-          <th>Validator</th>
-        </tr>
-      </thead>
-      <tbody>
-  `
-
-  props.forEach((prop) => {
-    table += `
-      <tr>
-        <td><b>${prop.name}</b></td>
-        <td>${prop.type ?? 'N/A'}</td>
-        <td>${prop.required ? '✅ Yes' : '❌ No'}</td>
-        <td>${prop.defaultValue ?? 'N/A'}</td>
-        <td>${prop.validator ?? 'None'}</td>
-      </tr>
-    `
-  })
-
-  table += '</tbody></table>'
-  return table
+export interface SlotData {
+  name: string
+  description?: string
+  bindings?: string // или более сложная структура, если нужны пропы скоупа
 }
 
-export function generateEventsTable(events: EventData[]): string {
-  let table = `
-    <h2>🔹 Events</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Prop</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-  `
-
-  events.forEach((prop) => {
-    table += `
-      <tr>
-        <td><b>${prop.name}</b></td>
-        <td>${prop.description ?? 'N/A'}</td>
-      </tr>
-    `
-  })
-
-  table += '</tbody></table>'
-  return table
-}
-
-export async function extractComponentData(componentPath: string): Promise<{ props: PropData[], events: EventData[] }> {
+export async function extractComponentData(componentPath: string, cache: boolean): Promise<{ props: PropData[], events: EventData[], slots: SlotData[] }> {
   try {
-    const cachedProps = propsCacheManager.getCachedProps(componentPath)
+    if (cache) {
+      const cachedProps = propsCacheManager.getCachedProps(componentPath)
 
-    if (cachedProps) {
-      // return cachedProps
+      if (cachedProps) {
+        return cachedProps
+      }
     }
 
     const doc = await docgenParse(componentPath)
@@ -98,13 +48,39 @@ export async function extractComponentData(componentPath: string): Promise<{ pro
       description: event.description || 'No description',
     })) ?? []
 
-    const extractedData = { props: propsData, events: eventsData }
+    // Новая секция: слоты
+    const slotsData: SlotData[] = doc.slots?.map((slot) => {
+      // Если нужен доступ к `slot.bindings`, можно склеить их в одну строку:
+      let bindings = ''
+      if (slot.bindings && Object.keys(slot.bindings).length > 0) {
+        // Пример: { props: 'type: string, description: "..."' }
+        // Собираем в удобный формат
+        bindings = Object.entries(slot.bindings)
+          .map(([bindingName, bindingType]) => `${bindingName}: ${bindingType}`)
+          .join(', ')
+      }
 
-    propsCacheManager.setCachedProps(componentPath, extractedData)
+      return {
+        name: slot.name,
+        description: slot.description || 'No description',
+        bindings,
+      }
+    }) ?? []
+
+    const extractedData = {
+      props: propsData,
+      events: eventsData,
+      slots: slotsData,
+    }
+
+    if (cache) {
+      propsCacheManager.setCachedProps(componentPath, extractedData)
+    }
+
     return extractedData
   }
   catch (error) {
     console.error(`Ошибка парсинга`, error)
-    return { props: [], events: [] }
+    return { props: [], events: [], slots: [] }
   }
 }

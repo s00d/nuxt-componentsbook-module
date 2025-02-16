@@ -69,7 +69,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, useRouter } from '#imports'
+import { ref, useRouter, useRuntimeConfig } from '#imports'
 
 interface FilePath {
   layerName: string
@@ -93,6 +93,8 @@ __REPLACE_IMPORT__
 
 const fileTree = ref<TreeNode[]>([])
 const selectedFile = ref('')
+const config = useRuntimeConfig()
+const baseURL = config.app.baseURL.replace(/\/$/, '')
 
 const router = useRouter()
 
@@ -164,7 +166,7 @@ function buildFileTree(filePaths: FilePath[]): TreeNode[] {
 
 /** При клике на кнопку "..." */
 function handleClick() {
-  window.open(`/componentsbook/`, '_blank')
+  window.open(`${baseURL}/componentsbook/`, '_blank')
 }
 
 /** Выбираем файл (клик на узле дерева) */

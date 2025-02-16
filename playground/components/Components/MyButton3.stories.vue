@@ -7,7 +7,7 @@ const label = ref('Click Me')
 const size = ref('md')
 const variant = ref('primary')
 
-const { generatedCode, copyToClipboard } = useCodeGenerator('MyButton3', {
+const { renderedComponent, generatedCode, copyToClipboard } = useCodeGenerator(MyButton, {
   label,
   size,
   variant,
@@ -15,7 +15,6 @@ const { generatedCode, copyToClipboard } = useCodeGenerator('MyButton3', {
 </script>
 
 <template>
-  <h1>🟢 MyButton3 Component</h1>
   <p>
     The <code>MyButton3</code> component is used to display a button with different styles and sizes.
   </p>
@@ -50,11 +49,7 @@ const { generatedCode, copyToClipboard } = useCodeGenerator('MyButton3', {
   </div>
 
   <h2>🔹 Preview</h2>
-  <MyButton
-    :label="label"
-    :size="size"
-    :variant="variant"
-  />
+  <component :is="renderedComponent" />
 
   <h2>📋 Generated Code</h2>
   <CodeBlock

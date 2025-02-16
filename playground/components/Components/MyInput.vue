@@ -1,8 +1,14 @@
 <template>
   <div class="input-container">
-    <label
-      v-if="label"
-    >{{ label }}</label>
+    <!-- Слот label (если не заполнен, используется prop label) -->
+    <label v-if="label || $slots.label">
+      <slot name="label">{{ label }}</slot>
+    </label>
+
+    <!-- Слот prepend -->
+    <slot name="prepend" />
+
+    <!-- Основной input -->
     <input
       :type="type"
       :value="modelValue"
@@ -12,11 +18,17 @@
       :class="inputClass"
       @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
     >
+
+    <!-- Слот append -->
+    <slot name="append" />
+
+    <!-- helper-text, если есть -->
     <p
       v-if="helperText"
       class="helper-text"
     >
       {{ helperText }}
+      <slot />
     </p>
   </div>
 </template>

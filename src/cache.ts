@@ -1,10 +1,18 @@
 import { createHash } from 'node:crypto'
 import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
-import type { EventData, PropData } from './extrector'
+import type { EventData, PropData, SlotData } from './extrector'
 
 export class PropsCacheManager {
-  private readonly cache: Record<string, { hash: string, data: { props: PropData[], events: EventData[] } }>
+  private readonly cache: Record<string, {
+    hash: string
+    data: {
+      props: PropData[]
+      events: EventData[]
+      slots: SlotData[]
+    }
+  }>
+
   private readonly cacheDir: string
   private readonly cacheFile: string
 
@@ -17,7 +25,7 @@ export class PropsCacheManager {
   /**
    * Загружает кэш из файла, если он существует.
    */
-  private loadCache(): Record<string, { hash: string, data: { props: PropData[], events: EventData[] } }> {
+  private loadCache(): Record<string, { hash: string, data: { props: PropData[], events: EventData[], slots: SlotData[] } }> {
     if (!existsSync(this.cacheFile)) return {}
     try {
       return JSON.parse(readFileSync(this.cacheFile, 'utf-8'))
@@ -47,7 +55,7 @@ export class PropsCacheManager {
   /**
    * Проверяет, есть ли закэшированные данные для файла и не изменился ли он.
    */
-  getCachedProps(filePath: string): { props: PropData[], events: EventData[] } | null {
+  getCachedProps(filePath: string): { props: PropData[], events: EventData[], slots: SlotData[] } | null {
     const fileHash = this.getFileHash(filePath)
     const cached = this.cache[filePath]
 
@@ -60,7 +68,7 @@ export class PropsCacheManager {
   /**
    * Сохраняет новые данные в кэш.
    */
-  setCachedProps(filePath: string, data: { props: PropData[], events: EventData[] }) {
+  setCachedProps(filePath: string, data: { props: PropData[], events: EventData[], slots: SlotData[] }) {
     const fileHash = this.getFileHash(filePath)
     this.cache[filePath] = { hash: fileHash, data }
     this.saveCache()
