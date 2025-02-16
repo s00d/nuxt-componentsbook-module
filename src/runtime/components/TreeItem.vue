@@ -83,7 +83,7 @@
           :node="child"
           :depth="depth + 1"
           :selected-file="selectedFile"
-          :default-expanded="false"
+          :default-expanded="childExpanded"
           @file-selected="handleFileSelected"
         />
       </div>
@@ -111,6 +111,7 @@ const props = defineProps<{
   node: TreeNode
   depth: number
   selectedFile: string
+  childExpanded?: boolean
   defaultExpanded?: boolean
 }>()
 

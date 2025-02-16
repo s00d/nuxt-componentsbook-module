@@ -47,15 +47,26 @@
           </svg>
         </button>
       </h2>
+
+      <!-- [Изменение для поиска] -->
+      <!-- Поле ввода для строки поиска -->
+      <input
+        v-model="searchQuery"
+        class="search-input"
+        type="text"
+        placeholder="Search components..."
+      >
+
       <ul class="file-tree">
-        <!-- Рекурсивный компонент TreeItem -->
+        <!-- Используем filteredTree вместо оригинального fileTree -->
         <TreeItem
-          v-for="(node, index) in fileTree"
+          v-for="(node, index) in filteredTree"
           :key="index"
           :node="node"
           :depth="0"
           :selected-file="selectedFile + '.stories.vue'"
           :default-expanded="true"
+          :child-expanded="searchQuery !== ''"
           @file-selected="selectFile"
         />
       </ul>
@@ -69,7 +80,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, useRouter, useRuntimeConfig } from '#imports'
+import { ref, computed, useRouter, useRuntimeConfig } from '#imports'
 
 interface FilePath {
   layerName: string
@@ -91,33 +102,20 @@ export interface TreeNode {
 // eslint-disable-next-line @typescript-eslint/no-unused-expressions
 __REPLACE_IMPORT__
 
-const fileTree = ref<TreeNode[]>([])
-const selectedFile = ref('')
+const router = useRouter()
 const config = useRuntimeConfig()
 const baseURL = config.app.baseURL.replace(/\/$/, '')
 
-const router = useRouter()
-
-// buildFileTree — создаёт иерархическую структуру: [ { name: layer_0, children: [...] }, ... ]
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error
-fileTree.value = buildFileTree(storyFiles)
-
 /**
- * Формируем дерево, где:
- *  - Корневой узел = имя слоя (layerName)
- *  - Внутри него — подпапки и файлы, полученные из relativePath.split('/')
+ * Построение дерева (исходная логика).
  */
 function buildFileTree(filePaths: FilePath[]): TreeNode[] {
   const tree: TreeNode[] = []
-  // Это нужно, чтобы каждый layerName был отдельным корневым узлом.
   const layersMap: Record<string, TreeNode> = {}
 
   for (const filePath of filePaths) {
-    // Проверяем, есть ли уже корневой узел для layerName
     let rootNode = layersMap[filePath.layerName]
     if (!rootNode) {
-      // Создаём "папку" с именем слоя
       rootNode = {
         name: filePath.layerName,
         fullPath: {
@@ -132,23 +130,16 @@ function buildFileTree(filePaths: FilePath[]): TreeNode[] {
       tree.push(rootNode)
     }
 
-    // Разбиваем relativePath на части
-    // Пример: "Button/Hello.stories.vue" => ["Button", "Hello.stories.vue"]
     const parts = filePath.relativePath.split('/')
-
-    // Начинаем с корневого узла (layerName)
     let currentNode = rootNode
 
-    // Идём по каждой части пути
     for (let i = 0; i < parts.length; i++) {
       const part = parts[i]
       const isFile = i === parts.length - 1
 
-      // Проверяем, есть ли уже такой дочерний узел
       let child = currentNode.children.find(c => c.name === part.replace(/\.stories\.vue$/, ''))
       if (!child) {
         child = {
-          // Убираем .stories.vue, если это последний элемент
           name: part.replace(/\.stories\.vue$/, ''),
           fullPath: filePath,
           isFile,
@@ -156,7 +147,6 @@ function buildFileTree(filePaths: FilePath[]): TreeNode[] {
         }
         currentNode.children.push(child)
       }
-
       currentNode = child
     }
   }
@@ -164,19 +154,76 @@ function buildFileTree(filePaths: FilePath[]): TreeNode[] {
   return tree
 }
 
+/**
+ * Фильтруем дерево по строке поиска.
+ * Если в узле (папке) есть совпадения в потомках — сама папка остаётся, но фильтруем её детей.
+ */
+function filterTree(nodes: TreeNode[], query: string): TreeNode[] {
+  const q = query.toLowerCase()
+
+  return nodes
+    .map((node) => {
+      const nodeName = node.name.toLowerCase()
+
+      // Если это файл и совпадает по имени — оставляем
+      if (node.isFile) {
+        if (nodeName.includes(q)) {
+          return node
+        }
+        return null
+      }
+
+      // Если это папка — фильтруем детей
+      const filteredChildren = filterTree(node.children, query)
+
+      // Папка «проходит», если её имя подходит под запрос ИЛИ у неё есть дочерние совпадения
+      if (nodeName.includes(q) || filteredChildren.length > 0) {
+        // Возвращаем копию узла с отфильтрованными детьми
+        return {
+          ...node,
+          children: filteredChildren,
+        }
+      }
+      return null
+    })
+    .filter(Boolean) as TreeNode[]
+}
+
+// [Изменение для поиска] ---------------------------
+
+// Исходное дерево (полный список без фильтра)
+// buildFileTree — создаёт иерархическую структуру: [ { name: layer_0, children: [...] }, ... ]
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-expect-error
+const originalFileTree = buildFileTree(storyFiles)
+
+/** Строка поиска */
+const searchQuery = ref('')
+
+/** Отфильтрованное дерево */
+const filteredTree = computed(() => {
+  const query = searchQuery.value.trim()
+  if (!query) {
+    // Возвращаем весь список, если строка поиска пуста
+    return originalFileTree
+  }
+  return filterTree(originalFileTree, query)
+})
+
+// -------------------------------------------------
+
+/** Здесь храним текущий выбранный файл (без .stories.vue) */
+const selectedFile = ref('')
+
 /** При клике на кнопку "..." */
 function handleClick() {
   window.open(`${baseURL}/componentsbook/`, '_blank')
 }
 
-/** Выбираем файл (клик на узле дерева) */
+/** При клике на узле дерева */
 function selectFile(filePath: FilePath) {
-  // filePath.relativePath = "Button/Hello.stories.vue"
-  // Убираем ".stories.vue" => "Button/Hello"
   const noExt = filePath.relativePath.replace(/\.stories\.vue$/, '')
   selectedFile.value = noExt
-
-  // Переходим на роут /componentsbook/layerName/Button/Hello
   router.push(`/componentsbook/${filePath.layerName}/${noExt}`)
 }
 </script>
@@ -222,5 +269,14 @@ function selectFile(filePath: FilePath) {
 .icon {
   width: 16px;
   height: 16px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 6px 8px;
+  margin: 8px 0;
+  box-sizing: border-box;
+  border-radius: 4px;
+  border: 1px solid #ccc;
 }
 </style>
