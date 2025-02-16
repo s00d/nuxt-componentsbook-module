@@ -177,7 +177,7 @@ const helperText = ref('This is a helper text.')
 const size = ref<'sm' | 'md' | 'lg'>('md')
 
 - // Previously:
-- // const { generatedCode, copyToClipboard } = useCodeGenerator('CustomInput', { ... })
+- // const { generatedCode, copyToClipboard } = useCodeGenerator(CustomInput, { ... })
 
 + // Now:
 + const { renderedComponent, generatedCode, copyToClipboard } = useCodeGenerator(CustomInput, {
