@@ -293,7 +293,12 @@ export default defineNuxtModule<ComponentsBookOptions>({
     addLayout({
       getContents({ options }) {
         // генерируем файл config.mjs
-        const configFile = join(nuxt.options.buildDir, `componentsbook/layout.config.mjs`)
+        const configDir = join(nuxt.options.buildDir, `componentsbook`)
+        if (!existsSync(configDir)) {
+          mkdirSync(configDir)
+        }
+
+        const configFile = join(configDir, `layout.config.mjs`)
         writeFileSync(configFile, `export default ${JSON.stringify(options.files, null, 2)}`)
 
         // А теперь подставим import в шаблон Vue:
