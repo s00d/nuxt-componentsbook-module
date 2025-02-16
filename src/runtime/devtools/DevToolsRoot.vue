@@ -3,6 +3,7 @@
     Change file
   </p>
 </template>
+
 <script setup>
 if (import.meta.client) {
   const observer = new MutationObserver(() => {
