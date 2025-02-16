@@ -1,4 +1,4 @@
-[![npm version](https://img.shields.io/npm/v/nnuxt-componentsbook-module/latest?style=for-the-badge)](https://www.npmjs.com/package/nuxt-componentsbook-module)
+[![npm version](https://img.shields.io/npm/v/nuxt-componentsbook-module/latest?style=for-the-badge)](https://www.npmjs.com/package/nuxt-componentsbook-module)
 [![npm downloads](https://img.shields.io/npm/dw/nuxt-componentsbook-module?style=for-the-badge)](https://www.npmjs.com/package/nuxt-componentsbook-module)
 [![License](https://img.shields.io/npm/l/nuxt-componentsbook-module?style=for-the-badge)](https://www.npmjs.com/package/nuxt-componentsbook-module)
 [![Nuxt](https://img.shields.io/badge/Nuxt-020420?logo=nuxt.js&style=for-the-badge)](https://nuxt.com)
