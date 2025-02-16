@@ -22,7 +22,6 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
 import StoryComponent from '${importPath}'
 
 const sourceCode = ref('${sourceCode}')
@@ -43,12 +42,14 @@ if (import.meta.client) {
 
 <style scoped>
 .componentsbook-page {
-  max-width: 800px;
-  margin: 0 auto;
   padding: 20px;
   font-family: 'Arial', sans-serif;
   line-height: 1.6;
   color: #333;
+  overflow: scroll;
+  height: 100%;
+  min-width: 800px;
+  margin: 0 auto;
 }
 
 /* Заголовки */

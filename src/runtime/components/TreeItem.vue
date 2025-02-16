@@ -1,6 +1,6 @@
 <template>
   <div>
-    <!-- Для файла -->
+    <!-- Если узел — это файл -->
     <div
       v-if="node.isFile"
       :class="['file-item', { selected: isSelected }]"
@@ -11,29 +11,14 @@
         <svg
           class="icon"
           viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
         >
-          <g transform="translate(4 4) scale(0.8)">
-            <circle
-              cx="12"
-              cy="12"
-              r="10"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-            />
-            <path
-              d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1"
-            />
-            <path
-              d="M2 12h20M5 5.2l14 14M5 18.8l14-14"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1"
-            />
-          </g>
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <path d="M14 2v6h6" />
         </svg>
       </span>
 
@@ -41,43 +26,12 @@
         class="file-name"
         v-html="node.name"
       />
-
-      <!-- Дополнительная кнопка справа -->
-      <button
-        class="file-button"
-        @click.stop="handleFileButtonClick"
-      >
-        <svg
-          class="icon"
-          viewBox="0 0 24 24"
-        >
-          <!-- Пример иконки троеточия -->
-          <circle
-            cx="5"
-            cy="12"
-            r="2"
-            fill="currentColor"
-          />
-          <circle
-            cx="12"
-            cy="12"
-            r="2"
-            fill="currentColor"
-          />
-          <circle
-            cx="19"
-            cy="12"
-            r="2"
-            fill="currentColor"
-          />
-        </svg>
-      </button>
     </div>
 
-    <!-- Для папки -->
+    <!-- Если узел — это папка -->
     <div v-else>
       <div
-        :class="['folder-header', { expanded: isExpanded, selected: selected }]"
+        :class="['folder-header', { expanded: isExpanded }]"
         :style="indentStyle"
         @click="toggleExpand"
       >
@@ -122,15 +76,15 @@
         v-if="isExpanded"
         class="folder-children"
       >
+        <!-- Рекурсивно отображаем потомков -->
         <TreeItem
           v-for="child in node.children"
-          :key="child.fullPath"
+          :key="child.fullPath.absolutePath"
           :node="child"
           :depth="depth + 1"
           :selected-file="selectedFile"
           :default-expanded="false"
           @file-selected="handleFileSelected"
-          @file-button-click="$emit('fileButtonClick', $event)"
         />
       </div>
     </div>
@@ -138,11 +92,17 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
+
+interface FilePath {
+  layerName: string
+  absolutePath: string
+  relativePath: string
+}
 
 export interface TreeNode {
   name: string
-  fullPath: string
+  fullPath: FilePath
   isFile: boolean
   children: TreeNode[]
 }
@@ -152,17 +112,18 @@ const props = defineProps<{
   depth: number
   selectedFile: string
   defaultExpanded?: boolean
-  selected?: boolean
 }>()
 
 const emit = defineEmits([
   'fileSelected',
-  'fileButtonClick', // Наше новое событие
 ])
 
 const isExpanded = ref(props.defaultExpanded || false)
-const isSelected = computed(() => props.selectedFile === props.node.fullPath)
 
+// Для выделения файла:
+const isSelected = computed(() => props.selectedFile === props.node.fullPath.relativePath)
+
+// Отступ слева (визуальная вложенность)
 const indentStyle = computed(() => ({
   paddingLeft: `${props.depth * 20 + 8}px`,
 }))
@@ -175,12 +136,12 @@ function handleFileClick() {
   emit('fileSelected', props.node.fullPath)
 }
 
-function handleFileButtonClick() {
-  // Отправляем событие с полным путём (или любыми другими данными)
-  emit('fileButtonClick', props.node.fullPath)
+// Когда дочерний компонент сообщает о выбранном файле
+function handleFileSelected(fullPath: string) {
+  emit('fileSelected', fullPath)
 }
 
-// Автоматически раскрываем папки по умолчанию
+// Автоматически раскрываем папку, если defaultExpanded
 watch(
   () => props.defaultExpanded,
   (val) => {
@@ -188,10 +149,6 @@ watch(
   },
   { immediate: true },
 )
-
-function handleFileSelected(fullPath: string) {
-  emit('fileSelected', fullPath)
-}
 </script>
 
 <style scoped>
@@ -222,9 +179,8 @@ function handleFileSelected(fullPath: string) {
   font-weight: 500;
 }
 
-/* Кнопка справа на файлах */
 .file-button {
-  margin-left: auto; /* чтобы «прижать» кнопку к правому краю */
+  margin-left: auto;
   border: none;
   background: transparent;
   cursor: pointer;
@@ -260,13 +216,6 @@ function handleFileSelected(fullPath: string) {
 .folder-header.expanded {
   font-weight: 500;
   color: #1e40af;
-}
-
-.folder-header.selected {
-  background: #eff6ff;
-  border-color: #3b82f6;
-  color: #1d4ed8;
-  font-weight: 500;
 }
 
 .icon {

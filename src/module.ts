@@ -4,7 +4,6 @@ import {
   defineNuxtModule,
   createResolver,
   addDevServerHandler,
-  addServerHandler,
   addLayout,
   addImportsDir,
   addComponentsDir,
@@ -25,11 +24,6 @@ export interface ComponentsBookOptions {
   disabled?: boolean
 }
 
-interface LayerInfo {
-  name: string // Префикс, который пойдёт в дерево
-  rootDir: string
-}
-
 export default defineNuxtModule<ComponentsBookOptions>({
   meta: {
     name: 'nuxt-componentsbook-module',
@@ -47,8 +41,7 @@ export default defineNuxtModule<ComponentsBookOptions>({
     const resolver = createResolver(import.meta.url)
     const componentsSubDir = options.componentsDir || 'components'
 
-    // Собираем все слои и даём им осмысленное имя (префикс)
-    // Если layer.config.name отсутствует, то подставим layer_{индекс}
+    // Собираем все слои. Если layer.config.name не задан, берём basename(rootDir) или "layer_i"
     const layers = nuxt.options._layers.map((layer, index) => {
       const layerName = basename(layer.config.rootDir) || `layer_${index}`
       return {
@@ -60,105 +53,93 @@ export default defineNuxtModule<ComponentsBookOptions>({
       // Если нужно, разворачиваем. Если не нужно — уберите .reverse()
       .reverse()
 
-    // Сохраняем в runtimeConfig, чтобы `files.ts` тоже знал про имена слоёв
+    // сохраняем в runtimeConfig
     nuxt.options.runtimeConfig.componentsComponentsBookConfig = {
       layers,
       componentsDir: componentsSubDir,
     }
 
-    addLayout({
-      src: resolver.resolve('./runtime/components/ComponentsBookContainer.vue'),
-      filename: 'componentsbook/layout.vue',
-      write: true,
-    }, 'componentsbook-layout')
-
-    // Папка для временных .vue
+    // Папка кэша
     const CACHE_DIR = join(__dirname, '.cache')
     if (!existsSync(CACHE_DIR)) {
       mkdirSync(CACHE_DIR)
     }
 
-    // Собираем все stories из всех слоёв:
-    // будем хранить их как { layerName, filePath } в одном массиве
+    // ================================
+    // 1. Ищем все .stories.vue
+    // ================================
     interface StoryFile {
       layerName: string
       absolutePath: string
       relativePath: string
     }
-
     const storyFiles: StoryFile[] = []
 
-    // 1. ищем *.stories.vue по каждому слою
+    // собираем *.stories.vue из каждого слоя
     for (const { name: layerName, rootDir } of layers) {
       const componentsRoot = join(rootDir, componentsSubDir)
       const found = await globby('**/*.stories.vue', {
         cwd: componentsRoot,
         absolute: true,
       })
-      for (const absPath of found) {
-        // Считаем относительный путь (например, 'Button/ButtonPrimary.stories.vue')
-        const rel = absPath.substring(componentsRoot.length + 1)
+      for (const abs of found) {
+        const rel = abs.substring(componentsRoot.length + 1)
         storyFiles.push({
           layerName,
-          absolutePath: absPath,
-          relativePath: rel, // включено "Button/ButtonPrimary.stories.vue"
+          absolutePath: abs,
+          relativePath: rel,
         })
       }
     }
 
-    // Удалим дубликаты, если вдруг встречаются
-    // — Обычно, если есть одинаковые файлы, приоритет будет у «последнего» слоя, но тут как вам нужно
+    // удаляем дубликаты (если вдруг)
     const uniqueMap = new Map<string, StoryFile>()
-    for (const item of storyFiles) {
-      // Ключом можно считать комбинацию layerName+relativePath
-      const uniqueKey = `${item.layerName}:${item.relativePath}`
-      uniqueMap.set(uniqueKey, item)
+    for (const s of storyFiles) {
+      const key = `${s.layerName}:${s.relativePath}`
+      uniqueMap.set(key, s)
     }
     const finalStories = Array.from(uniqueMap.values())
 
-    // 2. Генерируем временные .vue для каждой story
+    // ================================
+    // 2. Генерируем временные файлы
+    // ================================
     async function generateVueForStory(story: StoryFile) {
       const { layerName, absolutePath, relativePath } = story
-      // routePath будет "/componentsbook/layerName/Some/Nested"
-      // убираем '.stories.vue' => "Some/Nested"
+      // уберём ".stories.vue"
       const noExt = relativePath.replace(/\.stories\.vue$/, '')
 
-      // Сделаем имя выходного vue-файла (например, layerName_Some_Nested.vue)
+      // Имя выходного файла
       const vueFilePath = join(
         CACHE_DIR,
         `${layerName}_${noExt.replace(/\//g, '_')}.vue`,
       )
 
-      // Шаблон ComponentsBookPage.vue
-      const pagePath = resolver.resolve('./runtime/components/ComponentsBookPage.vue')
+      // Шаблон
+      const pagePath = resolver.resolve('./runtime/devtools/ComponentsBookPage.vue')
       let template = readFileSync(pagePath, 'utf-8')
 
-      // Теперь в <script setup> мы будем импортировать story-компонент
-      // через относительный путь
-      const relativeImport = relative(dirname(vueFilePath), absolutePath).replace(/\\/g, '/')
-      let importPath = relativeImport
+      // Делам относительный импорт, чтобы избежать alias
+      const relImport = relative(dirname(vueFilePath), absolutePath).replace(/\\/g, '/')
+      let importPath = relImport
       if (!importPath.startsWith('.')) {
         importPath = './' + importPath
       }
       template = template.replace('${importPath}', importPath)
 
-      // Если у нас есть компонент (без .stories), пытаемся достать props/events
+      // Если есть основной компонент (без .stories.vue)
       const rootDirOfLayer = join(
         layers.find(l => l.name === layerName)!.rootDir,
         componentsSubDir,
       )
-      const mainVueAbsolute = join(
-        rootDirOfLayer,
-        noExt + '.vue',
-      )
+      const mainAbsolute = join(rootDirOfLayer, noExt + '.vue')
 
       let componentsData: { props: PropData[], events: EventData[] } = { props: [], events: [] }
+      if (existsSync(mainAbsolute)) {
+        // extract props, events
+        componentsData = await extractComponentData(mainAbsolute)
 
-      if (existsSync(mainVueAbsolute)) {
-        componentsData = await extractComponentData(mainVueAbsolute)
-
-        // Считываем исходный код, чтобы показать
-        const fileContent = readFileSync(mainVueAbsolute, 'utf-8')
+        // подставляем исходный код
+        const fileContent = readFileSync(mainAbsolute, 'utf-8')
         const escapedContent = fileContent
           .replace(/\\/g, '\\\\')
           .replace(/`/g, '\\`')
@@ -175,7 +156,7 @@ export default defineNuxtModule<ComponentsBookOptions>({
         template = template.replace('\'${sourceCode}\'', '')
       }
 
-      // Подставляем таблицу Props
+      // propsTable
       if (componentsData.props.length > 0) {
         const propsTable = generatePropsTable(componentsData.props)
         template = template.replace('${propsTable}', propsTable)
@@ -184,7 +165,7 @@ export default defineNuxtModule<ComponentsBookOptions>({
         template = template.replace('${propsTable}', '')
       }
 
-      // Подставляем таблицу Events
+      // eventsTable
       if (componentsData.events.length > 0) {
         const eventsTable = generateEventsTable(componentsData.events)
         template = template.replace('${eventsTable}', eventsTable)
@@ -194,110 +175,19 @@ export default defineNuxtModule<ComponentsBookOptions>({
       }
 
       writeFileSync(vueFilePath, template)
-      return vueFilePath
     }
 
-    // Генерация временных файлов
+    // Генерируем для всех
     for (const story of finalStories) {
       await generateVueForStory(story)
     }
 
-    // 3. Создаём маршруты типа /componentsbook/{layerName}/{relativePath БЕЗ .stories.vue}
-    nuxt.hook('pages:extend', (pages) => {
-      for (const story of finalStories) {
-        const { layerName, relativePath } = story
-        const noExt = relativePath.replace(/\.stories\.vue$/, '')
+    // ================================
+    // 3. Регистрируем маршрут devtools
+    // ================================
+    // Сделаем одну страницу /__componentsbook_devtools__/ (показываем её во вкладке)
+    // Внутри неё – у нас уже не iframe, а локальная навигация
 
-        // Наш маршрут будет /componentsbook/base/Some/Nested
-        // либо /componentsbook/theme/...
-        const routePath = `/componentsbook/${layerName}/${noExt}`
-
-        // Имя выходного vue-файла
-        const vueFile = join(
-          CACHE_DIR,
-          `${layerName}_${noExt.replace(/\//g, '_')}.vue`,
-        )
-
-        pages.push({
-          name: `componentsbook-${layerName}-${noExt.replace(/\//g, '-')}`,
-          path: routePath,
-          file: vueFile,
-          meta: {
-            layout: 'componentsbook-layout',
-          },
-        })
-
-        addPrerenderRoutes(routePath)
-      }
-
-      // Страница со списком
-      const containerComponent = resolver.resolve('./runtime/components/ComponentsBookList.vue')
-      pages.push({
-        name: 'componentsbook-list',
-        path: '/componentsbook',
-        file: containerComponent,
-        meta: {
-          disableDevTools: true,
-        },
-      })
-
-      addPrerenderRoutes('/componentsbook')
-    })
-
-    // 4. Настраиваем watch (chokidar) в dev-режиме
-    if (nuxt.options.dev) {
-      const watchers: FSWatcher[] = []
-
-      for (const { name: layerName, rootDir } of layers) {
-        const componentsRoot = join(rootDir, componentsSubDir)
-        const watcher = watch('**/*.stories.vue', {
-          cwd: componentsRoot,
-          ignoreInitial: true,
-        })
-
-        watcher.on('add', async (file) => {
-          console.log(`[componentsbook] new file: ${file} in layer "${layerName}"`)
-          const absPath = join(componentsRoot, file)
-          const story: StoryFile = {
-            layerName,
-            absolutePath: absPath,
-            relativePath: file,
-          }
-          await generateVueForStory(story)
-        })
-
-        watcher.on('unlink', (file) => {
-          console.log(`[componentsbook] file remove: ${file} in layer "${layerName}"`)
-          const noExt = file.replace(/\.stories\.vue$/, '')
-          const vueFile = join(
-            CACHE_DIR,
-            `${layerName}_${noExt.replace(/\//g, '_')}.vue`,
-          )
-          if (existsSync(vueFile)) {
-            unlinkSync(vueFile)
-          }
-        })
-
-        watchers.push(watcher)
-      }
-
-      nuxt.hook('close', async () => {
-        for (const watcher of watchers) {
-          await watcher.close()
-        }
-      })
-    }
-
-    // Подключаем прочие возможности
-    addImportsDir(resolver.resolve('./runtime/composables'))
-
-    addComponentsDir({
-      path: resolver.resolve('./runtime/components_client'),
-      pathPrefix: false,
-      extensions: ['vue'],
-    })
-
-    // DevTools-вкладка
     addDevServerHandler({
       route: join(nuxt.options.app.baseURL, '/__componentsbook_devtools__'),
       handler: eventHandler((event) => {
@@ -308,22 +198,127 @@ export default defineNuxtModule<ComponentsBookOptions>({
       }),
     })
 
-    addServerHandler({
-      route: '/__componentsbook_devtools_api__/api/files.json',
-      handler: resolver.resolve('./runtime/server/api/componentsbook/files'),
-      env: ['prod', 'dev'],
+    // ================================
+    // 4. Генерируем маршруты (в нашем Nuxt-приложении)
+    // ================================
+    // Внутри самого проекта мы всё ещё можем создать /componentsbook/... страницы,
+    // но если хотим всё в DevTools, можно не делать публичные роуты.
+    // Для демонстрации пусть остаётся:
+
+    nuxt.hook('pages:extend', (pages) => {
+      for (const story of finalStories) {
+        const { layerName, relativePath } = story
+        const noExt = relativePath.replace(/\.stories\.vue$/, '')
+
+        // /componentsbook/layerName/...
+        const routePath = `/componentsbook/${layerName}/${noExt}`
+        const file = join(CACHE_DIR, `${layerName}_${noExt.replace(/\//g, '_')}.vue`)
+
+        pages.push({
+          name: `componentsbook-${layerName}-${noExt.replace(/\//g, '-')}`,
+          path: routePath,
+          file,
+          meta: {
+            layout: 'componentsbook-layout',
+          },
+        })
+
+        addPrerenderRoutes(routePath)
+      }
+
+      // добавим маршрут /componentsbook (список)
+      pages.push({
+        name: 'componentsbook-list',
+        path: '/componentsbook',
+        file: resolver.resolve('./runtime/devtools/DevToolsRoot.vue'),
+        meta: {
+          disableDevTools: true,
+          layout: 'componentsbook-layout',
+        },
+      })
+      addPrerenderRoutes('/componentsbook')
     })
 
-    addPrerenderRoutes('/__componentsbook_devtools_api__/api/files.json')
+    // ================================
+    // 5. Watch (chokidar)
+    // ================================
+    if (nuxt.options.dev) {
+      const watchers: FSWatcher[] = []
+      for (const { name: layerName, rootDir } of layers) {
+        const componentsRoot = join(rootDir, componentsSubDir)
+        const watcher = watch('**/*.stories.vue', {
+          cwd: componentsRoot,
+          ignoreInitial: true,
+        })
 
-    // Регистрируем вкладку
+        watcher.on('add', async (file) => {
+          const abs = join(componentsRoot, file)
+          const story: StoryFile = { layerName, absolutePath: abs, relativePath: file }
+          await generateVueForStory(story)
+        })
+
+        watcher.on('unlink', (file) => {
+          const noExt = file.replace(/\.stories\.vue$/, '')
+          const vueFile = join(CACHE_DIR, `${layerName}_${noExt.replace(/\//g, '_')}.vue`)
+          if (existsSync(vueFile)) {
+            unlinkSync(vueFile)
+          }
+        })
+
+        watchers.push(watcher)
+      }
+
+      nuxt.hook('close', async () => {
+        for (const w of watchers) {
+          await w.close()
+        }
+      })
+    }
+
+    // Регистрируем вкладку DevTools, которая показывает наш route
     nuxt.hook('devtools:customTabs', (tabs) => {
       tabs.push({
         name: 'components-book-dev',
         title: 'Components book',
-        icon: 'mdi:book-open-page-variant',
-        view: { type: 'iframe', src: join(nuxt.options.app.baseURL, '/__componentsbook_devtools__') },
+        icon: 'material-symbols:book',
+        // Вместо iframe, всё равно DevTools сам откроет route внутрь
+        // Но это "верхнеуровневый" iframe, нас просили убрать вложенный iframe
+        view: {
+          type: 'iframe',
+          src: join(nuxt.options.app.baseURL, '/__componentsbook_devtools__'),
+        },
       })
+    })
+
+    addLayout({
+      getContents({ options }) {
+        // генерируем файл config.mjs
+        const configFile = join(nuxt.options.buildDir, `componentsbook/layout.config.mjs`)
+        writeFileSync(configFile, `export default ${JSON.stringify(options.files, null, 2)}`)
+
+        // А теперь подставим import в шаблон Vue:
+        let layoutTemplate = readFileSync(
+          resolver.resolve('./runtime/layouts/ComponentsBookLayout.vue'),
+          'utf-8',
+        )
+        layoutTemplate = layoutTemplate.replace(
+          '__REPLACE_IMPORT__',
+          `import storyFiles from '#build/componentsbook/layout.config.mjs'`,
+        )
+        return layoutTemplate
+      },
+      filename: 'componentsbook/layout.vue',
+      write: true,
+      options: {
+        files: storyFiles,
+      },
+    }, 'componentsbook-layout')
+
+    addImportsDir(resolver.resolve('./runtime/composables'))
+    addComponentsDir({
+      path: resolver.resolve('./runtime/components'),
+      pathPrefix: false,
+      extensions: ['vue'],
     })
   },
 })
