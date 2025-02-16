@@ -190,7 +190,7 @@ function selectFile(filePath: FilePath) {
 .sidebar {
   width: 350px;
   border-right: 1px solid #ccc;
-  padding: 1rem;
+  padding: 0 1rem;
   overflow-y: auto;
 }
 

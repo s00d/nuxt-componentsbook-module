@@ -267,6 +267,7 @@ if (import.meta.client) {
 /* Спойлер с кодом */
 .code-spoiler {
   margin-top: 20px;
+  margin-bottom: 20px;
   background: #f9f9f9;
   padding: 10px;
   border-radius: 5px;
