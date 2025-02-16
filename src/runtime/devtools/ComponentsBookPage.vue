@@ -10,9 +10,10 @@
             <tr>
               <th>Prop</th>
               <th>Type</th>
+              <th>Values</th>
               <th>Required</th>
               <th>Default Value</th>
-              <th>Validator</th>
+              <th>Description</th>
             </tr>
           </thead>
           <tbody>
@@ -22,9 +23,10 @@
             >
               <td><b v-text="prop.name" /></td>
               <td v-text="prop.type ?? 'N/A'" />
+              <td v-text="prop.values ?? 'N/A'" />
               <td v-text="prop.required ? '✅ Yes' : '❌ No'" />
               <td v-text="prop.defaultValue ?? 'N/A'" />
-              <td v-text="prop.validator ?? 'None'" />
+              <td v-text="prop.description ?? 'N/A'" />
             </tr>
           </tbody>
         </table>

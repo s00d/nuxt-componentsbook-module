@@ -10,5 +10,7 @@ export default defineNuxtConfig({
     baseURL: process.env.NUXT_APP_BASE_URL || '/',
   },
   compatibilityDate: '2025-02-14',
-  componentsBook: {},
+  componentsBook: {
+    cache: false,
+  },
 })

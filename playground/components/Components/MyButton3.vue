@@ -23,11 +23,19 @@ export default defineComponent({
       type: String,
       default: 'Click me',
     },
+    /**
+     * The size of the button allows only some values
+     * @values sm, md, lg
+     */
     size: {
       type: String as () => ButtonProps['size'],
       default: 'md',
       validator: (value: string) => ['sm', 'md', 'lg'].includes(value),
     },
+    /**
+     * The type of the button allows only some values
+     * @values primary, secondary, danger
+     */
     variant: {
       type: String as () => ButtonProps['variant'],
       default: 'primary',

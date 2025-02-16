@@ -34,18 +34,29 @@ export async function extractComponentData(componentPath: string, cache: boolean
 
     const doc = await docgenParse(componentPath)
     const propsData = doc.props?.map((prop) => {
+      let values = 'N/A'
+      if (prop.values) {
+        values = prop.values.join(' | ')
+      }
+      else if (prop.type?.name) {
+        if (prop.type.name === 'union' && 'elements' in prop.type) {
+          values = (prop.type.elements as { name: string }[]).map(el => el.name).join(' | ')
+        }
+      }
+
       return {
         name: prop.name,
-        type: prop.type?.name || 'unknown',
+        values,
+        type: (prop.type?.name || 'N/A').replace('() => ', ''),
         defaultValue: prop.defaultValue?.value || 'N/A',
+        description: prop.description || 'N/A',
         required: prop.required || false,
-        validator: Array.isArray(prop.values) ? prop.values.join(' | ') : 'N/A',
       }
     }) ?? []
 
     const eventsData: EventData[] = doc.events?.map(event => ({
       name: event.name,
-      description: event.description || 'No description',
+      description: event.description || 'N/A',
     })) ?? []
 
     // Новая секция: слоты
@@ -62,7 +73,7 @@ export async function extractComponentData(componentPath: string, cache: boolean
 
       return {
         name: slot.name,
-        description: slot.description || 'No description',
+        description: slot.description || 'N/A',
         bindings,
       }
     }) ?? []
