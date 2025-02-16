@@ -1,0 +1,1 @@
+import{n as t,c as a,a as s,t as o,J as n,o as c}from"./BlUxIf_E.js";const r={id:"locale"},u={__name:"new",setup(_){const{$t:e}=t();return(l,p)=>(c(),a("div",null,[s("div",r,o(n(e)("key0")),1)]))}};export{u as default};
