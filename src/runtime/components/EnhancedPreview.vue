@@ -4,8 +4,7 @@
 
 <script setup lang="ts">
 import type { DefineComponent, VNode } from 'vue'
-import { defineProps, defineEmits } from 'vue'
-import { h, computed, toRefs, isRef, useSlots, ref, watch } from '#imports'
+import { defineProps, defineEmits, useSlots, h, computed, toRefs, isRef, ref, watch } from 'vue'
 
 // Props
 const propsDefinition = defineProps({
@@ -165,7 +164,7 @@ const toggleFreeze = () => {
 }
 
 // Render function
-const render = () => {
+const render = (): VNode => {
   return h(
     'section',
     { class: 'enhanced-preview' },
