@@ -1,4 +1,6 @@
 <script setup>
+import { unref } from '#imports'
+
 const props = defineProps({
   generatedCode: [String, Object], // Разрешаем ref()
   copyToClipboard: Function,

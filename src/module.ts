@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from '
 import {
   addComponentsDir,
   addDevServerHandler,
-  addImportsDir,
+  // addImportsDir,
   addLayout,
   addPrerenderRoutes,
   createResolver,
@@ -314,7 +314,7 @@ export default defineNuxtModule<ComponentsBookOptions>({
       },
     }, 'componentsbook-layout')
 
-    addImportsDir(resolver.resolve('./runtime/composables'))
+    // addImportsDir(resolver.resolve('./runtime/composables'))
     addComponentsDir({
       path: resolver.resolve('./runtime/components'),
       pathPrefix: false,

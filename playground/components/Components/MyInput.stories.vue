@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue'
 import CustomInput from './MyInput.vue'
-import { useCodeGenerator } from '#imports'
+import { ref } from '#imports'
 
 const modelValue = ref('')
 const label = ref('Enter Text')
@@ -12,17 +11,9 @@ const readonly = ref(false)
 const helperText = ref('This is a helper text.')
 const size = ref<'sm' | 'md' | 'lg'>('md')
 
-const { renderedComponent, generatedCode, copyToClipboard } = useCodeGenerator(CustomInput, {
-  'id': 'input',
-  'v-model': modelValue,
-  label,
-  type,
-  placeholder,
-  disabled,
-  readonly,
-  'helper-text': helperText,
-  size,
-})
+const handleClick = () => {
+  console.log('click')
+}
 </script>
 
 <template>
@@ -90,14 +81,25 @@ const { renderedComponent, generatedCode, copyToClipboard } = useCodeGenerator(C
     </label>
   </div>
 
-  <h2>🔹 Preview</h2>
-  <component :is="renderedComponent" />
-
-  <h2>📋 Generated Code</h2>
-  <CodeBlock
-    :generated-code="generatedCode"
-    :copy-to-clipboard="copyToClipboard"
-  />
+  <EnhancedPreview
+    v-model="modelValue"
+    :component="CustomInput"
+    :props="{
+      label,
+      type,
+      placeholder,
+      disabled,
+      readonly,
+      'helper-text': helperText,
+      size,
+    }"
+    :emits="['click']"
+    @click="handleClick"
+  >
+    <template #append>
+      test slot
+    </template>
+  </EnhancedPreview>
 </template>
 
 <style scoped>

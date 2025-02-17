@@ -17,6 +17,7 @@
       :readonly="readonly"
       :class="inputClass"
       @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
+      @click="$emit('click')"
     >
 
     <!-- Слот append -->
@@ -84,7 +85,7 @@ export default defineComponent({
       validator: (value: string) => ['sm', 'md', 'lg'].includes(value),
     },
   },
-  emits: ['update:modelValue'],
+  emits: ['update:modelValue', 'click'],
   setup(props: InputProps) {
     const inputClass = computed(() => [
       'input',

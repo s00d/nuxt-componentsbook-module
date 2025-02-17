@@ -1,31 +1,23 @@
-[![npm version](https://img.shields.io/npm/v/nuxt-componentsbook-module/latest?style=for-the-badge)](https://www.npmjs.com/package/nuxt-componentsbook-module)
-[![npm downloads](https://img.shields.io/npm/dw/nuxt-componentsbook-module?style=for-the-badge)](https://www.npmjs.com/package/nuxt-componentsbook-module)
-[![License](https://img.shields.io/npm/l/nuxt-componentsbook-module?style=for-the-badge)](https://www.npmjs.com/package/nuxt-componentsbook-module)
-[![Nuxt](https://img.shields.io/badge/Nuxt-020420?logo=nuxt.js&style=for-the-badge)](https://nuxt.com)
-[![Donate](https://img.shields.io/badge/Donate-ff4081?style=for-the-badge)](https://www.donationalerts.com/r/s00d88)
-
 # Components Book Module for Nuxt
-
 
 ![header](https://github.com/s00d/nuxt-componentsbook-module/blob/main/images/header.jpg?raw=true)
 
 ## Overview
-This module provides a Storybook-like experience for Nuxt components, allowing you to document and test your Vue components using `.stories.vue` files. It scans a specified directory for story files, generates dynamic routes, and creates an interactive UI for viewing and testing components.
+This module provides a **Storybook-like experience** for Nuxt components, allowing you to document and test your Vue components using `.stories.vue` files. It automatically scans a specified directory for story files, generates dynamic routes, and creates an interactive UI for viewing and testing components.
 
-This module serves as a lightweight alternative to Storybook, designed specifically for Nuxt projects. Unlike Storybook, which can be heavy and complex to configure, this module is built with Vue and seamlessly integrates into Nuxt, making setup and usage much simpler. All stories are written using Vue components, ensuring a more intuitive and consistent development experience within your project.
+Unlike Storybook, which can be complex and heavy, this module is **lightweight and seamlessly integrates into Nuxt**, making it easy to set up and use. All stories are written as standard Vue components, ensuring a **smooth and intuitive** development experience.
 
 ![img1](https://github.com/s00d/nuxt-componentsbook-module/blob/main/images/img1.gif?raw=true)
-
 ![img2](https://github.com/s00d/nuxt-componentsbook-module/blob/main/images/img2.gif?raw=true)
 
 ## Features
-- Automatically scans and registers `.stories.vue` files as pages.
-- Generates Vue files dynamically for each story.
-- Extracts and displays component props in a structured table.
-- Provides hot reloading with file watching.
-- Adds a Nuxt DevTools tab for easy component exploration.
-- 📌 Supports `CodeBlock.vue` for displaying and copying generated component usage.
-- 🚀 Provides `useCodeGenerator.ts` for automatic code snippet generation.
+- 📦 **Automatic scanning of `.stories.vue` files** and registration as pages.
+- ⚡ **Live reloading** with file-watching support.
+- 🛠 **Extracts and displays component props** dynamically.
+- 🏗 **Nuxt DevTools Integration** for quick access.
+- 📋 **Built-in component previewing with `EnhancedPreview`.**
+- 🔄 **Supports dynamic prop manipulation and slot usage.**
+- 🚀 **Flexible component embedding with event handling support.**
 
 ## Installation
 ```bash
@@ -38,7 +30,7 @@ or
 yarn add --dev nuxt-componentsbook-module
 ```
 
-## Usage
+## Setup
 
 ### 1. Register the Module
 Add the module to your `nuxt.config.ts`:
@@ -57,35 +49,23 @@ export default defineNuxtConfig({
 ```
 
 ### 2. Creating a Story
-Create a `.stories.vue` file in your components directory:
+To document a component, create a `.stories.vue` file in your components directory:
 
-**MyInput.stories.vue**
+#### **MyInput.stories.vue** (Example with `EnhancedPreview`)
+
 ```vue
 <script setup>
-  import { ref } from 'vue'
-  import CustomInput from './MyInput.vue'
-  import { useCodeGenerator } from '#imports'
+import { ref } from '#imports'
+import CustomInput from './MyInput.vue'
 
-  const modelValue = ref('')
-  const label = ref('Enter Text')
-  const type = ref<'text' | 'password' | 'email' | 'number'>('text')
-  const placeholder = ref('Type something...')
-  const disabled = ref(false)
-  const readonly = ref(false)
-  const helperText = ref('This is a helper text.')
-  const size = ref<'sm' | 'md' | 'lg'>('md')
-
-  const { generatedCode, copyToClipboard } = useCodeGenerator(CustomInput, {
-    id: 'input',
-    'v-model': modelValue,
-    label,
-    type,
-    placeholder,
-    disabled,
-    readonly,
-    'helper-text': helperText,
-    size,
-  })
+const modelValue = ref('')
+const label = ref('Enter Text')
+const type = ref<'text' | 'password' | 'email' | 'number'>('text')
+const placeholder = ref('Type something...')
+const disabled = ref(false)
+const readonly = ref(false)
+const helperText = ref('This is a helper text.')
+const size = ref<'sm' | 'md' | 'lg'>('md')
 </script>
 
 <template>
@@ -110,114 +90,18 @@ Create a `.stories.vue` file in your components directory:
         <option value="number">Number</option>
       </select>
     </label>
-
-    <label>
-      Placeholder:
-      <input v-model="placeholder" type="text">
-    </label>
-
-    <label>
-      <input v-model="disabled" type="checkbox"> Disabled
-    </label>
-
-    <label>
-      <input v-model="readonly" type="checkbox"> Readonly
-    </label>
-
-    <label>
-      Helper Text:
-      <input v-model="helperText" type="text">
-    </label>
-
-    <label>
-      Size:
-      <select v-model="size">
-        <option value="sm">Small</option>
-        <option value="md">Medium</option>
-        <option value="lg">Large</option>
-      </select>
-    </label>
   </div>
 
   <h2>🔹 Preview</h2>
-  <CustomInput
-    id="input"
+  <EnhancedPreview
     v-model="modelValue"
-    :label="label"
-    :type="type"
-    :placeholder="placeholder"
-    :disabled="disabled"
-    :readonly="readonly"
-    :helper-text="helperText"
-    :size="size"
-  />
-
-  <h2>📋 Generated Code</h2>
-  <CodeBlock :generated-code="generatedCode" :copy-to-clipboard="copyToClipboard" />
-</template>
-```
-
-### Using `renderedComponent` for Simpler Embedding
-
-In addition to returning only `generatedCode` and `copyToClipboard`, you can have `useCodeGenerator` return a special `renderedComponent`. This allows you to embed your component dynamically via `<component :is="renderedComponent" />`. Below is an **example of how to modify** your `.stories.vue` file to use the `renderedComponent` approach:
-
-```diff
-<script setup lang="ts">
-import { ref } from 'vue'
-import CustomInput from './MyInput.vue'
-import { useCodeGenerator } from '#imports'
-
-const modelValue = ref('')
-const label = ref('Enter Text')
-const type = ref<'text' | 'password' | 'email' | 'number'>('text')
-const placeholder = ref('Type something...')
-const disabled = ref(false)
-const readonly = ref(false)
-const helperText = ref('This is a helper text.')
-const size = ref<'sm' | 'md' | 'lg'>('md')
-
-- // Previously:
-- // const { generatedCode, copyToClipboard } = useCodeGenerator(CustomInput, { ... })
-
-+ // Now:
-+ const { renderedComponent, generatedCode, copyToClipboard } = useCodeGenerator(CustomInput, {
-+   'id': 'input',
-+   'v-model': modelValue,
-+   label,
-+   type,
-+   placeholder,
-+   disabled,
-+   readonly,
-+   'helper-text': helperText,
-+   size,
-+ })
-</script>
-
-<template>
-  ...
-  <h2>🔹 Preview</h2>
-- <CustomInput
--   id="input"
--   v-model="modelValue"
--   :label="label"
--   :type="type"
--   :placeholder="placeholder"
--   :disabled="disabled"
--   :readonly="readonly"
--   :helper-text="helperText"
--   :size="size"
-- />
-+ <component :is="renderedComponent" />
-
-  <h2>📋 Generated Code</h2>
-  <CodeBlock
-    :generated-code="generatedCode"
-    :copy-to-clipboard="copyToClipboard"
+    :component="CustomInput"
+    :props="{ label, type, placeholder, disabled, readonly, 'helper-text': helperText, size }"
+    :emits="['click']"
+    @click="console.log('Clicked!')"
   />
 </template>
 ```
-
-> **Note**: Using `renderedComponent` is a convenient way to embed the component in a single line. However, this approach is more limited when dealing with advanced use cases—like complex slot usage or additional wrapper logic. In those scenarios, you may find the **previous, direct approach** (`<CustomInput ... />`) to be more flexible and better suited to your needs.
 
 ### 3. Running the Components Book
 Start your Nuxt development server:
@@ -230,20 +114,59 @@ Visit `/componentsbook` in your browser to see the list of stories.
 
 ---
 
+## 📌 **Using `EnhancedPreview`**
+
+The `EnhancedPreview` component is the recommended way to embed and test your components interactively. It allows for dynamic prop manipulation, event handling, and slot usage.
+
+### **Example Usage**
+```vue
+<EnhancedPreview
+  v-model="modelValue"
+  :component="CustomInput"
+  :props="{
+    label: 'Enter Text',
+    type: 'text',
+    placeholder: 'Type something...',
+    disabled: false,
+    readonly: false,
+    'helper-text': 'This is a helper text.',
+    size: 'md',
+  }"
+  :emits="['click']"
+  @click="handleClick"
+>
+  <template #append>
+    test slot
+  </template>
+</EnhancedPreview>
+```
+
+### **Key Features of `EnhancedPreview`**
+- **Supports `v-model`**: Automatically binds `v-model` values.
+- **Handles events dynamically**: Passes events such as `@click`, `@hover`, and custom events.
+- **Slot support**: Allows injecting content into component slots.
+- **Live preview**: Updates props and re-renders instantly.
+- **Code generation**: Displays and copies usage examples.
+
+---
+
 ## How It Works
-1. The module scans the specified `componentsDir` for `.stories.vue` files.
-2. It generates dynamic Vue pages for each story and registers them with Nuxt.
-3. A layout (`componentsbook-layout`) is added to encapsulate the story viewer.
-4. A prop table is generated for each component based on its script setup.
-5. File watching via `chokidar` enables automatic updates when stories are modified.
-6. A DevTools tab is added for quick access in Nuxt development mode.
+1. **The module scans** the specified `componentsDir` for `.stories.vue` files.
+2. **Generates dynamic Vue pages** for each story and registers them with Nuxt.
+3. **Provides a UI layout** for previewing and testing components interactively.
+4. **Supports real-time editing** with automatic updates when files are modified.
+5. **Enhances DevTools**, adding a new tab called **Components Book**.
 
 ---
 
 ## 🛠 **DevTools Integration**
-When running in development mode, a new DevTools tab called **Components Book** is available, providing an iframe-based UI to explore component stories.
+When running in development mode, a **Components Book** tab appears in Nuxt DevTools, providing an **iframe-based UI** for exploring stories.
 
 ---
 
 ## 🤝 **Contributing**
 Feel free to submit issues and pull requests to improve the module.
+
+## 📜 License
+[MIT License](https://opensource.org/licenses/MIT)
+

@@ -1,17 +1,10 @@
 <script setup>
-import { ref } from 'vue'
 import MyButton from './MyButton3.vue'
-import { useCodeGenerator } from '#imports'
+import { ref } from '#imports'
 
 const label = ref('Click Me')
 const size = ref('md')
 const variant = ref('primary')
-
-const { renderedComponent, generatedCode, copyToClipboard } = useCodeGenerator(MyButton, {
-  label,
-  size,
-  variant,
-})
 </script>
 
 <template>
@@ -48,13 +41,13 @@ const { renderedComponent, generatedCode, copyToClipboard } = useCodeGenerator(M
     </label>
   </div>
 
-  <h2>🔹 Preview</h2>
-  <component :is="renderedComponent" />
-
-  <h2>📋 Generated Code</h2>
-  <CodeBlock
-    :generated-code="generatedCode"
-    :copy-to-clipboard="copyToClipboard"
+  <EnhancedPreview
+    :component="MyButton"
+    :props="{
+      label,
+      size,
+      variant,
+    }"
   />
 </template>
 
