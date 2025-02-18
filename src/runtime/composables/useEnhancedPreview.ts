@@ -35,19 +35,83 @@ interface UseEnhancedPreviewProps {
 }
 
 /**
- * Утилита для упрощённой "сериализации" массива VNode в текст.
+ * A helper function to determine a "tag name" for a VNode:
+ * - If it's a native HTML element (a string like 'div'), return that.
+ * - If it's a component, try to extract name/__name, etc.
+ */
+function getNodeTag(node: VNode): string {
+  if (typeof node.type === 'string') {
+    // Native HTML element
+    return node.type
+  }
+
+  // Otherwise, assume it's a component
+  const comp = node.type as DefineComponent
+  return comp?.name || comp?.__name || 'AnonymousComponent'
+}
+
+/**
+ * A more advanced serializer that tries to show nested elements or components recursively.
+ */
+function serializeVNode(node: VNode, depth = 0): string {
+  if (!node) return ''
+
+  // 1) If it's a text node (child is a plain string):
+  if (typeof node.children === 'string') {
+    return node.children
+  }
+
+  // 2) If there's an array of child nodes, we will recurse:
+  const childArray = Array.isArray(node.children) ? node.children : []
+  const tagName = getNodeTag(node)
+  const indent = '  '.repeat(depth)
+
+  // Attempt to build a basic "props" string
+  const propsEntries = node.props
+    ? Object.entries(node.props)
+    : []
+
+  const propsString = propsEntries
+    .map(([key, val]) => {
+      // We can refine this logic as needed
+      if (typeof val === 'string') {
+        return ` ${key}="${val}"`
+      }
+      else if (typeof val === 'number' || typeof val === 'boolean') {
+        return ` :${key}="${val}"`
+      }
+      else if (typeof val === 'function') {
+        // Or you might want `[Function]` here instead of the raw .toString()
+        return ` :${key}="${val.toString()}"`
+      }
+      else {
+        // Fallback to JSON
+        return ` :${key}='${JSON.stringify(val)}'`
+      }
+    })
+    .join('')
+
+  if (childArray.length) {
+    // If there are nested children, recurse
+    const childrenSerialized = childArray
+      .map(child => (isVNode(child) ? serializeVNode(child, depth + 1) : ''))
+      .join('')
+    return `${indent}<${tagName}${propsString}>${childrenSerialized}</${tagName}>\n`
+  }
+  else {
+    // No children
+    return `${indent}<${tagName}${propsString} />\n`
+  }
+}
+
+/**
+ * This function handles arrays of VNodes (the slot VNode array)
+ * by mapping over them and serializing each one in turn.
  */
 function serializeSlotVNodes(vnodes: VNodeArrayChildren): string {
-  return vnodes.map((node) => {
-    if (!isVNode(node)) return ''
-    if (typeof node.children === 'string') {
-      return node.children
-    }
-    if (Array.isArray(node.children)) {
-      return serializeSlotVNodes(node.children)
-    }
-    return '[Complex VNode]'
-  }).join('')
+  return vnodes
+    .map(node => (isVNode(node) ? serializeVNode(node) : ''))
+    .join('')
 }
 
 export function useEnhancedPreview(
@@ -74,6 +138,7 @@ export function useEnhancedPreview(
     () => mergedProps.props?.value,
     (newProps) => {
       Object.entries(newProps ?? []).forEach(([key, value]) => {
+        // e.g. if key === 'v-model:foo', then event is 'update:foo'
         emitEvent(`update:${key.replace('v-model:', '')}`, value)
       })
     },
@@ -124,8 +189,6 @@ export function useEnhancedPreview(
     const userListeners = mergedProps.listeners?.value || {}
 
     // 1) Добавляем emitEvent-события (для случаев, когда eventName объявлен в emits)
-    //    Пример: emits = ['customEvent']
-    //    => eventListeners['onCustomEvent'] = (args) => emitEvent('customEvent', args)
     customEmits.value.forEach((eventName) => {
       // В шаблонах Vue: @foo -> onFoo
       const capitalized = eventName.charAt(0).toUpperCase() + eventName.slice(1)
@@ -136,7 +199,6 @@ export function useEnhancedPreview(
 
     // 2) Мёржим с пользовательскими слушателями (переданными через props.listeners)
     //    Для удобства поддержим оба варианта: 'click' / 'onClick'
-    //    Вы сами решайте, как именно обрабатывать:
     for (const [key, handler] of Object.entries(userListeners)) {
       if (!key.startsWith('on')) {
         // Превращаем 'click' -> 'onClick'
@@ -182,6 +244,7 @@ export function useEnhancedPreview(
 
   const generatedCode = computed(() => {
     if (isFrozen.value) {
+      // If code is frozen, we return the stored version
       return frozenCode.value
     }
 
@@ -211,18 +274,6 @@ export function useEnhancedPreview(
       .map(event => `  @${event}="handler"`)
       .join('\n')
 
-    // Listeners, если хотите тоже выводить в коде
-    // (Это опционально; можно пропускать, если не нужно в итоговой «витрине»)
-    const listenersLines = Object.keys(dynamicListeners.value)
-      // У нас ключи вида onClick, onFocus etc.
-      // Для генерации шаблона @click="..." надо убрать on + toLowerCase()
-      .filter(k => k.startsWith('on'))
-      .map((k) => {
-        const eventName = k.slice(2).toLowerCase() // onClick -> click
-        return `  @${eventName}="/* yourHandler */"`
-      })
-      .join('\n')
-
     // Слоты
     const slotLines = Object.keys(slotContents.value)
       .map((slotName) => {
@@ -231,19 +282,18 @@ export function useEnhancedPreview(
       })
       .join('\n')
 
-    const componentName = props.name
-      || (typeof props.component !== 'string' && (
-        (props.component as DefineComponent).name
-        || (props.component as DefineComponent).__name
-      ))
-      || 'UnknownComponent'
+    // Identify component name (if available)
+    const componentName
+      = props.name
+        || (typeof props.component !== 'string'
+          && ((props.component as DefineComponent).name
+            || (props.component as DefineComponent).__name))
+          || 'UnknownComponent'
 
-    // Склеиваем результат
+    // Construct final code
     return `<${componentName}
 ${propLines}
-${eventLines ? `${eventLines}\n` : ''}${
-  listenersLines ? `${listenersLines}\n` : ''
-}>
+${eventLines ? `${eventLines}\n` : ''}>
 ${slotLines ? slotLines + '\n' : ''}
 </${componentName}>`
   })

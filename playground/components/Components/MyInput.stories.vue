@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import CustomInput from './MyInput.vue'
+import MyButton from './MyButton.vue'
 import { ref } from '#imports'
 
 const modelValue = ref('')
@@ -98,6 +99,7 @@ const handleClick = () => {
   >
     <template #append>
       test slot
+      <MyButton label="test"></MyButton>
     </template>
   </EnhancedPreview>
 </template>
