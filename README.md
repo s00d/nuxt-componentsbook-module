@@ -157,6 +157,39 @@ The `EnhancedPreview` component is the recommended way to embed and test your co
 4. **Supports real-time editing** with automatic updates when files are modified.
 5. **Enhances DevTools**, adding a new tab called **Components Book**.
 
+
+## nuxt-i18n-micro integration
+
+Below is an updated note clarifying **why you should place `nuxt-componentsbook-module` **before** `nuxt-i18n-micro`** in your `modules` array, given that in *this specific setup*, having the locale prefix added to Components Book routes can cause problems.
+
+---
+
+## Integration with **nuxt-i18n-micro**
+
+### Example `nuxt.config.ts`
+
+```ts
+import { defineNuxtConfig } from 'nuxt/config'
+
+export default defineNuxtConfig({
+  extends: './basic',
+
+  // Order here is important:
+  // 1) 'nuxt-componentsbook-module' (Components Book)
+  // 2) 'nuxt-i18n-micro'
+  modules: [
+    'nuxt-componentsbook-module',
+    'nuxt-i18n-micro',
+  ],
+})
+```
+
+### Why the order matters here
+
+- When **`nuxt-i18n-micro`** is **after** the Components Book module, it will attempt to apply locale prefixes (e.g., `/en/`) to the already-registered Components Book routes.
+- In **this particular setup**, adding the prefix can break your story routes (for example, `/en/componentsbook/...` might conflict with how the Components Book module is generating or managing its pages).
+- By listing **`nuxt-componentsbook-module` first** and **`nuxt-i18n-micro` second**, you avoid having a locale prefix automatically prepended to the Components Book routes, which prevents potential route conflicts.
+
 ---
 
 ## 🛠 **DevTools Integration**
