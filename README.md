@@ -141,12 +141,252 @@ The `EnhancedPreview` component is the recommended way to embed and test your co
 </EnhancedPreview>
 ```
 
+
+
+
+
+
+
+
+Below is an **advanced example** of how you can leverage `useEnhancedPreview` to gain complete control over a component’s state, events, and display. This approach requires a bit more work, but it allows you to integrate **fully custom store logic** or any other advanced patterns you need.
+
+## Overview
+
+The `useEnhancedPreview` composable is an **extended utility** that goes beyond a simple component preview. It provides you with:
+
+1. **Reactive props and `v-model` binding**
+2. **Event forwarding** (`emits`)
+3. **Additional event listeners** (e.g., `onClick`, `onFocus`, etc.)
+4. **Slot serialization** (for generating code snippets)
+5. **Code copying / freezing** features
+
+Because it is so flexible, you can create a near-complete “in-component Storybook experience,” connecting your **state management** (Vuex, Pinia, or custom Refs/Reactives) and a wide range of events to a single preview component.
+
 ### **Key Features of `EnhancedPreview`**
 - **Supports `v-model`**: Automatically binds `v-model` values.
 - **Handles events dynamically**: Passes events such as `@click`, `@hover`, and custom events.
 - **Slot support**: Allows injecting content into component slots.
 - **Live preview**: Updates props and re-renders instantly.
 - **Code generation**: Displays and copies usage examples.
+
+
+---
+
+# Enhanced Preview
+
+### Signature
+
+```ts
+useEnhancedPreview(
+  props: UseEnhancedPreviewProps,
+  emit: (event: string, ...args: unknown[]) => void,
+)
+```
+
+### **Parameters**
+
+`props` (object) includes the following fields:
+
+| Field          | Type                                                                     | Description                                                                                                                                                                                                                                                                                                        |
+|----------------|--------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **component**  | `DefineComponent \| string \| unknown`                                   | The main component to render. <br> This can be: <br> 1) A **string** representing a native HTML tag (e.g., `"button"`) <br> 2) A **Vue component** (e.g., `markRaw(MyComponent)`) <br> 3) A dynamic reference to a component loaded at runtime.                                                                    |
+| **modelValue** | `string \| number \| boolean \| object \| array \| null \| Ref<unknown>` | Value used for two-way data binding. If defined, the composable automatically sets up the `v-model` logic (i.e., `modelValue` + `onUpdate:modelValue`). This can be a **ref** or a direct value.                                                                                                                   |
+| **props**      | `Record<string, unknown>`                                                | Additional props that should be passed to the rendered component. This can include normal props or specialized keys like `'v-model:checked'`, `'v-model:foo'`, etc. The composable internally wires these up to update events.                                                                                     |
+| **emits**      | `string[]`                                                               | An array of event names that the component might emit. If you list `['click', 'myEvent']`, for example, the composable will handle them via its internal `emitEvent` logic. You can also see these events reflected in the generated code snippet.                                                                 |
+| **listeners**  | `Record<string, (...args: unknown[]) => void>`                           | A dictionary of **additional event handlers**. This can be either: <br> - Keys without `on` prefix, e.g. `{ click: () => {...} }` <br> - Keys with `on` prefix, e.g. `{ onClick: () => {...} }`. <br> These listeners are attached directly to the rendered component in Vue 3 style (`onClick`, `onFocus`, etc.). |
+
+`emit` is a function with the signature:
+```ts
+(event: string, ...args: unknown[]) => void
+```
+Typically this is **`defineEmits`** from within the parent `<script setup>`.
+
+---
+
+## Returned Properties
+
+The composable returns a set of **reactive values and computed properties** that you can integrate into your template:
+
+| Property                | Type                                   | Description                                                                                                                                                                                                                       |
+|-------------------------|----------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **`renderedComponent`** | `ComputedRef<VNode>`                   | The actual Vue node that you can render via `<component :is="renderedComponent" />`. It combines all the props, events, and listeners into a single component instance.                                                           |
+| **`dynamicProps`**      | `ComputedRef<Record<string, unknown>>` | Internal object of all processed props. You usually won’t render this directly, but it’s accessible if you need to debug or pass them somewhere else.                                                                             |
+| **`generatedCode`**     | `ComputedRef<string>`                  | An auto-generated code snippet that shows how to use the component with the currently bound props, events, and (optionally) slot placeholders. This can be displayed to the user or used for copying to the clipboard.            |
+| **`copyButtonText`**    | `Ref<string>`                          | The text on a “Copy” button. It updates automatically to `✅ Copied!` when the user copies the snippet, then reverts back to `📋 Copy`.                                                                                            |
+| **`isFrozen`**          | `Ref<boolean>`                         | Indicates whether the code snippet is “frozen.” When frozen, the `generatedCode` no longer reacts to prop changes. Useful for capturing a stable snippet even while you continue changing the actual component’s props in the UI. |
+| **`toggleFreeze`**      | `() => void`                           | Toggles the `isFrozen` state. If **unfrozen**, calling `toggleFreeze` captures the current code snippet and stops future updates. If **frozen**, calling it again releases the freeze.                                            |
+| **`copyCode`**          | `() => Promise<void>`                  | Copies the current `generatedCode` to the user’s clipboard. Sets `copyButtonText` to “✅ Copied!” for a few seconds as feedback.                                                                                                   |
+
+---
+
+## Advanced Examples
+
+Below is a **comprehensive** example of how to integrate the composable. It demonstrates:
+
+1. **Marking a component as `markRaw`** to avoid Vue reactivity overhead.
+2. **Using `reactive`** to handle multiple fields and watchers within a single object.
+3. **Providing `listeners`** for custom event handling.
+4. **Using `emits`** to specify which events should be recognized and forwarded.
+
+### Example: Textarea + Badge
+
+```vue
+<script setup lang="ts">
+import CustomTextarea from './CustomTextarea.vue'
+import CustomBadge from './CustomBadge.vue'
+import { ref, reactive, markRaw } from '#imports'
+import { useEnhancedPreview } from '@/runtime/composables/useEnhancedPreview'
+
+// We have a text area and a badge, each with their own props
+const modelValue = ref('')
+const placeholder = ref('Type here...')
+const text = ref('Badge Label')
+const variant = ref<'primary' | 'secondary'>('primary')
+
+// Additional handler just to show we can do custom logic
+const handleInput = () => {
+  console.log('Text entered:', modelValue.value)
+}
+
+// Define an `emit` for v-model updates or custom emits
+const emit = defineEmits(['update:modelValue'])
+
+// 1) Setup for CustomTextarea
+const {
+  copyButtonText,
+  isFrozen,
+  toggleFreeze,
+  copyCode,
+  renderedComponent,
+  generatedCode,
+} = useEnhancedPreview(
+  reactive({
+    component: markRaw(CustomTextarea),    // Mark the component as raw
+    modelValue,                            // Pass a ref directly
+    props: {
+      placeholder: placeholder.value,      // Normal prop
+    },
+    emits: ['update:modelValue'],          // We'll forward this event
+    listeners: {
+      // You can use either `update:modelValue` or `onUpdate:modelValue`
+      'update:modelValue': (value) => {
+        modelValue.value = value as string
+      },
+    },
+  }),
+  emit as (event: string, ...args: unknown[]) => void
+)
+
+// 2) Setup for CustomBadge
+const {
+  copyButtonText: copyButtonTextBadge,
+  isFrozen: isFrozenBadge,
+  toggleFreeze: toggleFreezeBadge,
+  copyCode: copyCodeBadge,
+  renderedComponent: renderedBadge,
+  generatedCode: generatedCodeBadge,
+} = useEnhancedPreview(
+  reactive({
+    component: markRaw(CustomBadge),
+    // No need for modelValue here; just passing some props
+    props: {
+      text: text.value,
+      variant: variant.value,
+    },
+  }),
+  emit as (event: string, ...args: unknown[]) => void
+)
+</script>
+
+<template>
+  <!-- Render the Textarea -->
+  <p>
+    The <code>CustomTextarea</code> component provides a multi-line text input.
+  </p>
+
+  <component :is="renderedComponent" />
+
+  <PreviewSpoiler>
+    <PreviewCodeBlock
+      :code="generatedCode"
+      :show-frozen="true"
+      :is-frozen="isFrozen"
+      :copy-button-text="copyButtonText"
+      @toggle-freeze="toggleFreeze"
+      @copy="copyCode"
+    />
+  </PreviewSpoiler>
+
+  <!-- Render the Badge -->
+  <component :is="renderedBadge" @update:model-value="handleInput" />
+
+  <PreviewSpoiler>
+    <PreviewCodeBlock
+      :code="generatedCodeBadge"
+      :show-frozen="true"
+      :is-frozen="isFrozenBadge"
+      :copy-button-text="copyButtonTextBadge"
+      @toggle-freeze="toggleFreezeBadge"
+      @copy="copyCodeBadge"
+    />
+  </PreviewSpoiler>
+</template>
+```
+
+### Explanation
+
+1. **`markRaw(CustomTextarea)`**  
+   We wrap our Vue component in `markRaw()` so that Vue **does not** convert the component object into a reactive proxy. This prevents warnings and extra overhead.
+
+2. **Using `reactive(...)`**  
+   We pass an object that bundles up our refs (`modelValue`) and literal values (`props`) together. This allows them to be watched for changes. The composable will reflect those changes in the code snippet automatically.
+
+3. **`listeners`**  
+   In the first setup, we provide a listener for `'update:modelValue'`. This ensures that whenever `CustomTextarea` emits that event, we update `modelValue.value` accordingly.
+  - Alternatively, you could have used `'onUpdate:modelValue'` or `'onClick'` if you prefer the Vue 3 naming style.
+
+4. **Multiple Instances**  
+   We show `useEnhancedPreview` used **twice** — once for the textarea, once for the badge. Each instance returns a unique set of computed properties and reactive states.
+
+5. **Rendering**  
+   Instead of writing `<CustomTextarea v-model="modelValue" :placeholder="placeholder" />`, you simply do:
+   ```vue
+   <component :is="renderedComponent" />
+   ```
+   The composable **already** merges the props, the `v-model` logic, and the event listeners for you.
+
+---
+
+## Additional Notes
+
+- **`modelValue` can be optional**: If you don’t need two-way binding, just omit it.
+- **Merging `emits` and `listeners`**: The composable merges your declared `emits` (which you might want to track or show in `generatedCode`) and additional raw event handlers in `listeners`.
+- **Slots**: Any slots passed to `<component :is="renderedComponent">` are captured and reflected in the `generatedCode` snippet. In actual usage, you might specify them inline:
+  ```vue
+  <component :is="renderedComponent">
+    <template #append>
+      <div>Some appended slot content</div>
+    </template>
+  </component>
+  ```
+- **Performance**: Mark your component with `markRaw(...)` if it’s a `DefineComponent` object to avoid Vue’s deep reactivity overhead.
+- **Frozen Code**: Toggling `freeze` is useful if you need to “lock in” a snippet while continuing to change props or watchers.
+
+---
+
+## Recommendations
+
+- Start with **simple usage** (just the `component` prop, maybe a `modelValue`) before introducing advanced store logic or multiple watchers.
+- Always wrap large or complex component objects with **`markRaw()`** if you pass them to `useEnhancedPreview` in a reactive context.
+- If you only need standard props and events, consider the simpler usage with `EnhancedPreview` in `.stories.vue`. This advanced integration is primarily for scenarios where you need deeper control.
+
+---
+
+### Summary
+
+`useEnhancedPreview` is an **advanced composable** that provides a flexible, high-powered way to preview your components with interactive props, event forwarding, and snippet generation. It’s ideal when you need a level of control that goes beyond simple in-component previews, such as fully custom store integrations or specialized event handling.
+
+By carefully configuring `props`, `modelValue`, `emits`, and `listeners`, you can build a robust, dynamic “mini Storybook” experience directly within your Nuxt app.
 
 ---
 
@@ -196,6 +436,12 @@ export default defineNuxtConfig({
 When running in development mode, a **Components Book** tab appears in Nuxt DevTools, providing an **iframe-based UI** for exploring stories.
 
 ---
+
+## More Resources
+- **[Live Demo](https://s00d.github.io/nuxt-componentsbook-module/componentsbook)** – Explore the module in action and see various sample stories.
+- **[Usage Examples](https://github.com/s00d/nuxt-componentsbook-module/tree/main/playground/components)** – View additional `.stories.vue` files illustrating different configurations and patterns.
+
+You can use these references to learn more advanced usage patterns, get inspired by existing stories, and see how they integrate with the rest of your Nuxt app.
 
 ## 🤝 **Contributing**
 Feel free to submit issues and pull requests to improve the module.
