@@ -99,7 +99,7 @@ const handleClick = () => {
   >
     <template #append>
       test slot
-      <MyButton label="test"></MyButton>
+      <MyButton label="test" />
     </template>
   </EnhancedPreview>
 </template>
