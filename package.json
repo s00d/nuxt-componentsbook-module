@@ -1,6 +1,6 @@
 {
   "name": "nuxt-componentsbook-module",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "This module provides a Storybook-like experience for Nuxt components",
   "repository": "s00d/nuxt-componentsbook-module",
   "license": "MIT",
@@ -38,25 +38,26 @@
   "dependencies": {
     "@nuxt/kit": "3.15.4",
     "chokidar": "^3.6.0",
-    "globby": "^14.0.2",
-    "h3": "^1.10.0",
+    "globby": "^14.1.0",
+    "h3": "^1.15.0",
+    "highlight.js": "^11.11.1",
     "sirv": "^2.0.4",
     "ufo": "^1.5.4",
     "vue-docgen-api": "^4.79.2"
   },
   "devDependencies": {
-    "@nuxt/devtools": "^1.7.0",
-    "@nuxt/eslint-config": "0.7.4",
+    "@nuxt/devtools": "^2.1.0",
+    "@nuxt/eslint-config": "^1.1.0",
     "@nuxt/module-builder": "^0.8.4",
-    "@nuxt/schema": "3.15.3",
+    "@nuxt/schema": "^3.15.4",
     "@nuxt/test-utils": "^3.15.4",
     "@types/node": "latest",
     "changelogen": "^0.5.7",
     "eslint": "^9.20.1",
-    "nuxt": "3.15.3",
+    "nuxt": "^3.15.4",
     "typescript": "5.6.3",
-    "vitest": "^3.0.5",
-    "vue-tsc": "^2.2.0"
+    "vitest": "^3.0.6",
+    "vue-tsc": "^2.2.2"
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "^4.28.1",
