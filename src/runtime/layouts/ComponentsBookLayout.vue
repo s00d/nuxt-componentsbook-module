@@ -146,7 +146,10 @@ function buildFileTree(filePaths: FilePath[]): TreeNode[] {
           children: [],
         }
         currentNode.children.push(child)
+
+        currentNode.children.sort((a, b) => Number(a.isFile) - Number(b.isFile))
       }
+
       currentNode = child
     }
   }
