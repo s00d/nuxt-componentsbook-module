@@ -6,7 +6,7 @@
       :disabled="disabled"
       @change="$emit('update:modelValue', ($event.target as HTMLInputElement).checked)"
     >
-    <span class="checkmark"></span>
+    <span class="checkmark" />
     <slot>{{ label }}</slot>
   </label>
 </template>
