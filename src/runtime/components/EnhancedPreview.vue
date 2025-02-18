@@ -4,7 +4,7 @@
 
 <script setup lang="ts">
 import type { DefineComponent, VNode } from 'vue'
-import { defineProps, defineEmits, useSlots, h, computed, toRefs, isRef, ref, watch } from 'vue'
+import { useSlots, h, computed, toRefs, isRef, ref, watch } from 'vue'
 
 // Props
 const propsDefinition = defineProps({
