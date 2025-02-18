@@ -20,7 +20,7 @@ import MyButton from './MyButton.vue'
   <h3>🔹 Different Styles</h3>
   <div class="button-group">
     <EnhancedPreview
-      title="Primary Styles"
+      title="Primary Button Styles"
       :component="MyButton"
       :props="{
         label: 'Primary',
@@ -29,7 +29,7 @@ import MyButton from './MyButton.vue'
     />
 
     <EnhancedPreview
-      title="Secondary Styles"
+      title="Secondary Button Styles"
       :component="MyButton"
       :props="{
         label: 'Secondary',
@@ -38,7 +38,7 @@ import MyButton from './MyButton.vue'
     />
 
     <EnhancedPreview
-      title="Danger Styles"
+      title="Danger Button Styles"
       :component="MyButton"
       :props="{
         label: 'Danger',
@@ -50,7 +50,7 @@ import MyButton from './MyButton.vue'
   <h3>🔹 Different Sizes</h3>
   <div class="button-group">
     <EnhancedPreview
-      title="Small Size"
+      title="Small Button Size"
       :component="MyButton"
       :props="{
         label: 'Small',
@@ -59,7 +59,7 @@ import MyButton from './MyButton.vue'
     />
 
     <EnhancedPreview
-      title="Medium Size"
+      title="Medium Button Size"
       :component="MyButton"
       :props="{
         label: 'Medium',
@@ -68,7 +68,7 @@ import MyButton from './MyButton.vue'
     />
 
     <EnhancedPreview
-      title="Large Size"
+      title="Large Button Size"
       :component="MyButton"
       :props="{
         label: 'Large',
