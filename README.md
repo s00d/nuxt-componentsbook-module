@@ -142,24 +142,6 @@ The `EnhancedPreview` component is the recommended way to embed and test your co
 ```
 
 
-
-
-
-
-
-
-Below is an **advanced example** of how you can leverage `useEnhancedPreview` to gain complete control over a component’s state, events, and display. This approach requires a bit more work, but it allows you to integrate **fully custom store logic** or any other advanced patterns you need.
-
-## Overview
-
-The `useEnhancedPreview` composable is an **extended utility** that goes beyond a simple component preview. It provides you with:
-
-1. **Reactive props and `v-model` binding**
-2. **Event forwarding** (`emits`)
-3. **Additional event listeners** (e.g., `onClick`, `onFocus`, etc.)
-4. **Slot serialization** (for generating code snippets)
-5. **Code copying / freezing** features
-
 Because it is so flexible, you can create a near-complete “in-component Storybook experience,” connecting your **state management** (Vuex, Pinia, or custom Refs/Reactives) and a wide range of events to a single preview component.
 
 ### **Key Features of `EnhancedPreview`**
@@ -172,7 +154,19 @@ Because it is so flexible, you can create a near-complete “in-component Storyb
 
 ---
 
-# Enhanced Preview
+# Enhanced usage(useEnhancedPreview)
+
+Below is an **advanced example** of how you can leverage `useEnhancedPreview` to gain complete control over a component’s state, events, and display. This approach requires a bit more work, but it allows you to integrate **fully custom store logic** or any other advanced patterns you need.
+
+## Overview
+
+The `useEnhancedPreview` composable is an **extended utility** that goes beyond a simple component preview. It provides you with:
+
+1. **Reactive props and `v-model` binding**
+2. **Event forwarding** (`emits`)
+3. **Additional event listeners** (e.g., `onClick`, `onFocus`, etc.)
+4. **Slot serialization** (for generating code snippets)
+5. **Code copying / freezing** features
 
 ### Signature
 
