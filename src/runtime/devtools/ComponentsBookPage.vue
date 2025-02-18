@@ -78,18 +78,22 @@
     </div>
     <StoryComponent />
 
-    <details
-      v-if="`${showSource}`"
-      class="code-spoiler"
-    >
-      <summary>Source code</summary>
-      <pre class="code-block">
-        <code
-          class="highlighted-code"
-          v-text="sourceCode"
+    <div>
+      <PreviewSpoiler
+        v-if="showSource"
+        hide-label="▼ Hide Component Code"
+        show-label="▶ Show Component Code"
+      >
+        <PreviewCodeBlock
+          v-if="showSource"
+          :code="sourceCode"
+          :is-frozen="false"
+          :show-frozen="false"
+          copy-button-text="📋 Copy"
+          @copy="copyCode"
         />
-      </pre>
-    </details>
+      </PreviewSpoiler>
+    </div>
   </div>
 </template>
 
@@ -103,11 +107,20 @@ const slotsData = ref('${slotsData}')
 const showSource = ref('${showSource}')
 const sourceCode = ref('${sourceCode}')
 
+const copyCode = async () => {
+  try {
+    await navigator.clipboard.writeText(sourceCode.value)
+  }
+  catch (err) {
+    console.error('Failed to copy:', err)
+  }
+}
+
 if (import.meta.client) {
   const observer = new MutationObserver(() => {
     const devTools = document.getElementById('nuxt-devtools-container')
     if (devTools) {
-      console.log('[componentsbook] Удаляем Nuxt DevTools из DOM')
+      console.log('[componentsbook] Remove Nuxt DevTools from DOM')
       devTools.remove()
       observer.disconnect() // Останавливаем наблюдение после удаления
     }

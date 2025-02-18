@@ -9,7 +9,7 @@ if (import.meta.client) {
   const observer = new MutationObserver(() => {
     const devTools = document.getElementById('nuxt-devtools-container')
     if (devTools) {
-      console.log('[componentsbook] Удаляем Nuxt DevTools из DOM')
+      console.log('[componentsbook] Remove Nuxt DevTools from DOM')
       devTools.remove()
       observer.disconnect() // Останавливаем наблюдение после удаления
     }
