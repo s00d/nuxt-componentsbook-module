@@ -1,0 +1,24 @@
+import{_ as R,a as $}from"./Dw_ba-jO.js";import{_ as D}from"./Be1NRngx.js";import{m as A,_ as k,c as a,o,a as e,T as B,d as x,t as s,r as m,M as h,b as y,L as n,R as V,K as C,N as f,J as g,w as T}from"./DVQnm3ND.js";import"./GvVry5ad.js";const P=A({name:"CustomRadio",props:{modelValue:String,value:String,label:String},emits:["update:modelValue"]}),q=["checked","value"];function E(r,l,p,c,b,d){return o(),a("label",null,[e("input",{type:"radio",checked:r.modelValue===r.value,value:r.value,onChange:l[0]||(l[0]=_=>r.$emit("update:modelValue",r.value))},null,40,q),B(r.$slots,"default",{},()=>[x(s(r.label),1)])])}const N=k(P,[["render",E]]),O=A({__name:"CustomRadio.stories",setup(r){const l=m("option1"),p=m([{value:"option1",label:"Option 1"},{value:"option2",label:"Option 2"}]),c=()=>{console.log("Selected radio:",l.value)};return(b,d)=>{const _=D;return o(),a(h,null,[d[2]||(d[2]=e("p",null,[x(" The "),e("code",null,"CustomRadio"),x(" component provides radio button selection. ")],-1)),y(_,{modelValue:n(l),"onUpdate:modelValue":[d[0]||(d[0]=i=>V(l)?l.value=i:null),c],component:N,props:{value:n(p)[0].value,label:n(p)[0].label},emits:["update:modelValue"]},null,8,["modelValue","props"]),y(_,{modelValue:n(l),"onUpdate:modelValue":[d[1]||(d[1]=i=>V(l)?l.value=i:null),c],component:N,props:{value:n(p)[1].value,label:n(p)[1].label},emits:["update:modelValue"]},null,8,["modelValue","props"])],64)}}}),L={class:"componentsbook-page"},M={key:0},z=["textContent"],F=["textContent"],I=["textContent"],U=["textContent"],H=["textContent"],J=["textContent"],K={key:1},Y=["textContent"],j=["textContent"],G={key:2},Q=["textContent"],W=["textContent"],X=["textContent"],Z={__name:"playground_Components_lib_CustomRadio",setup(r){const l=m([{name:"modelValue",values:"N/A",type:"string",defaultValue:"N/A",description:"N/A",required:!1},{name:"value",values:"N/A",type:"string",defaultValue:"N/A",description:"N/A",required:!1},{name:"label",values:"N/A",type:"string",defaultValue:"N/A",description:"N/A",required:!1}]),p=m([{name:"update:modelValue",description:"N/A"}]),c=m([{name:"default",description:"N/A",bindings:""}]),b=m(!0),d=m(`<template>
+  <label>
+    <input
+      type="radio"
+      :checked="modelValue === value"
+      :value="value"
+      @change="$emit('update:modelValue', value)"
+    >
+    <slot>{{ label }}</slot>
+  </label>
+</template>
+
+<script lang="ts">
+export default defineComponent({
+  name: 'CustomRadio',
+  props: {
+    modelValue: String,
+    value: String,
+    label: String,
+  },
+  emits: ['update:modelValue'],
+})
+<\/script>
+`),_=async()=>{try{await navigator.clipboard.writeText(d.value)}catch(i){console.error("Failed to copy:",i)}};{const i=new MutationObserver(()=>{const t=document.getElementById("nuxt-devtools-container");t&&(console.log("[componentsbook] Remove Nuxt DevTools from DOM"),t.remove(),i.disconnect())});i.observe(document.body,{childList:!0,subtree:!0})}return(i,t)=>{const S=$,w=R;return o(),a("div",L,[e("div",null,[t[6]||(t[6]=e("h1",null,"🟢 CustomRadio Component",-1)),n(l).length?(o(),a("div",M,[t[1]||(t[1]=e("h2",null,"🔹 Props",-1)),e("table",null,[t[0]||(t[0]=e("thead",null,[e("tr",null,[e("th",null,"Prop"),e("th",null,"Type"),e("th",null,"Values"),e("th",null,"Required"),e("th",null,"Default Value"),e("th",null,"Description")])],-1)),e("tbody",null,[(o(!0),a(h,null,f(n(l),(u,v)=>(o(),a("tr",{key:v},[e("td",null,[e("b",{textContent:s(u.name)},null,8,z)]),e("td",{textContent:s(u.type??"N/A")},null,8,F),e("td",{textContent:s(u.values??"N/A")},null,8,I),e("td",{textContent:s(u.required?"✅ Yes":"❌ No")},null,8,U),e("td",{textContent:s(u.defaultValue??"N/A")},null,8,H),e("td",{textContent:s(u.description??"N/A")},null,8,J)]))),128))])])])):C("",!0),n(p).length?(o(),a("div",K,[t[3]||(t[3]=e("h2",null,"🔹 Events",-1)),e("table",null,[t[2]||(t[2]=e("thead",null,[e("tr",null,[e("th",null,"Prop"),e("th",null,"Description")])],-1)),e("tbody",null,[(o(!0),a(h,null,f(n(p),(u,v)=>(o(),a("tr",{key:v},[e("td",null,[e("b",{textContent:s(u.name)},null,8,Y)]),e("td",{textContent:s(u.description??"N/A")},null,8,j)]))),128))])])])):C("",!0),n(c).length?(o(),a("div",G,[t[5]||(t[5]=e("h2",null,"🔹 Slots",-1)),e("table",null,[t[4]||(t[4]=e("thead",null,[e("tr",null,[e("th",null,"Slot"),e("th",null,"Description"),e("th",null,"Bindings")])],-1)),e("tbody",null,[(o(!0),a(h,null,f(n(c),(u,v)=>(o(),a("tr",{key:v},[e("td",null,[e("b",{textContent:s(u.name)},null,8,Q)]),e("td",{textContent:s(u.description??"N/A")},null,8,W),e("td",{textContent:s(u.bindings??"N/A")},null,8,X)]))),128))])])])):C("",!0)]),y(O),e("div",null,[n(b)?(o(),g(w,{key:0,"hide-label":"▼ Hide Component Code","show-label":"▶ Show Component Code"},{default:T(()=>[n(b)?(o(),g(S,{key:0,code:n(d),"is-frozen":!1,"show-frozen":!1,"copy-button-text":"📋 Copy",onCopy:_},null,8,["code"])):C("",!0)]),_:1})):C("",!0)])])}}},le=k(Z,[["__scopeId","data-v-1a79459b"]]);export{le as default};
