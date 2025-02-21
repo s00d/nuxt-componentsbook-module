@@ -7,7 +7,7 @@
   </button>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from '#imports'
 
 const props = defineProps({
@@ -18,24 +18,21 @@ const props = defineProps({
   size: {
     type: String,
     default: 'md',
-    validator: value => ['sm', 'md', 'lg'].includes(value),
+    validator: (value: string) => ['sm', 'md', 'lg'].includes(value),
   },
   variant: {
     type: String,
     default: 'primary',
-    validator: value => ['primary', 'secondary', 'danger'].includes(value),
+    validator: (value: string) => ['primary', 'secondary', 'danger'].includes(value),
   },
 })
 
-// Добавляем поддержку событий
 const emit = defineEmits(['click'])
 
-// Обработчик клика
 const handleClick = () => {
-  emit('click') // Испускаем событие клика
+  emit('click')
 }
 
-// Динамическое создание классов
 const buttonClass = computed(() => [
   'btn',
   `btn-${props.variant}`,
@@ -43,7 +40,7 @@ const buttonClass = computed(() => [
 ])
 </script>
 
-<style>
+<style scoped>
 .btn {
   border: none;
   cursor: pointer;

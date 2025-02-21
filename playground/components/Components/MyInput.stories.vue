@@ -11,6 +11,7 @@ const disabled = ref(false)
 const readonly = ref(false)
 const helperText = ref('This is a helper text.')
 const size = ref<'sm' | 'md' | 'lg'>('md')
+const slotLabel = ref('Label')
 
 const handleClick = () => {
   console.log('click')
@@ -82,6 +83,7 @@ const handleClick = () => {
     </label>
   </div>
 
+  <!-- Используем EnhancedPreview, чтобы отрендерить CustomInput и автоматически сгенерировать код. -->
   <EnhancedPreview
     v-model="modelValue"
     :component="CustomInput"
@@ -97,9 +99,10 @@ const handleClick = () => {
     :emits="['click']"
     @click="handleClick"
   >
+    <!-- Пример использования слота append -->
     <template #append>
       test slot
-      <MyButton label="test" />
+      <MyButton :label="slotLabel" />
     </template>
   </EnhancedPreview>
 </template>

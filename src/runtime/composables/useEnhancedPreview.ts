@@ -1,11 +1,3 @@
-import type {
-  Component,
-  DefineComponent,
-  VNode,
-  WatchStopHandle,
-  VNodeArrayChildren,
-  Ref,
-} from 'vue'
 import {
   ref,
   computed,
@@ -16,108 +8,122 @@ import {
   onUnmounted,
   useSlots,
   isVNode,
+  type WatchStopHandle,
+  type Component,
+  type DefineComponent,
+  type VNode,
+  type VNodeArrayChildren,
+  type Ref,
 } from 'vue'
 
 interface UseEnhancedPreviewProps {
   title?: string
   name?: string
   component: DefineComponent | string | unknown
-  modelValue?: string | number | boolean | Record<string, unknown> | Array<unknown> | null | Ref<unknown>
+  modelValue?:
+    | string
+    | number
+    | boolean
+    | Record<string, unknown>
+    | Array<unknown>
+    | null
+    | Ref<unknown>
   props?: Record<string, unknown>
   emits?: string[]
-  /**
-   * Дополнительные слушатели:
-   *   { click: (evt) => void, focus: (evt) => void, ... }
-   * или же ключи могут быть уже в формате onSomething:
-   *   { onClick: (evt) => void }
-   */
   listeners?: Record<string, (...args: unknown[]) => void>
 }
 
-/**
- * A helper function to determine a "tag name" for a VNode:
- * - If it's a native HTML element (a string like 'div'), return that.
- * - If it's a component, try to extract name/__name, etc.
- */
+interface CodeGenOptions {
+  fullVueFile?: boolean
+  kebabCase?: boolean
+  withComments?: boolean
+  eventNameToHandler?: Record<string, string>
+  specialDirectives?: Record<string, string>
+  slotProps?: Record<string, string[]>
+}
+
+/** Утилиты */
+
 function getNodeTag(node: VNode): string {
   if (typeof node.type === 'string') {
-    // Native HTML element
     return node.type
   }
-
-  // Otherwise, assume it's a component
   const comp = node.type as DefineComponent
   return comp?.name || comp?.__name || 'AnonymousComponent'
 }
 
-/**
- * A more advanced serializer that tries to show nested elements or components recursively.
- */
 function serializeVNode(node: VNode, depth = 0): string {
   if (!node) return ''
-
-  // 1) If it's a text node (child is a plain string):
   if (typeof node.children === 'string') {
     return node.children
   }
-
-  // 2) If there's an array of child nodes, we will recurse:
   const childArray = Array.isArray(node.children) ? node.children : []
   const tagName = getNodeTag(node)
   const indent = '  '.repeat(depth)
 
-  // Attempt to build a basic "props" string
-  const propsEntries = node.props
+  const propsString = node.props
     ? Object.entries(node.props)
-    : []
-
-  const propsString = propsEntries
-    .map(([key, val]) => {
-      // We can refine this logic as needed
-      if (typeof val === 'string') {
-        return ` ${key}="${val}"`
-      }
-      else if (typeof val === 'number' || typeof val === 'boolean') {
-        return ` :${key}="${val}"`
-      }
-      else if (typeof val === 'function') {
-        // Or you might want `[Function]` here instead of the raw .toString()
-        return ` :${key}="${val.toString()}"`
-      }
-      else {
-        // Fallback to JSON
-        return ` :${key}='${JSON.stringify(val)}'`
-      }
-    })
-    .join('')
+        .map(([key, val]) => {
+          if (typeof val === 'string') {
+            return ` ${key}="${val}"`
+          }
+          else if (typeof val === 'number' || typeof val === 'boolean') {
+            return ` :${key}="${val}"`
+          }
+          else if (typeof val === 'function') {
+            return ` :${key}="${val.toString()}"`
+          }
+          else {
+            return ` :${key}='${JSON.stringify(val)}'`
+          }
+        })
+        .join('')
+    : ''
 
   if (childArray.length) {
-    // If there are nested children, recurse
     const childrenSerialized = childArray
       .map(child => (isVNode(child) ? serializeVNode(child, depth + 1) : ''))
       .join('')
     return `${indent}<${tagName}${propsString}>${childrenSerialized}</${tagName}>\n`
   }
   else {
-    // No children
     return `${indent}<${tagName}${propsString} />\n`
   }
 }
 
-/**
- * This function handles arrays of VNodes (the slot VNode array)
- * by mapping over them and serializing each one in turn.
- */
 function serializeSlotVNodes(vnodes: VNodeArrayChildren): string {
   return vnodes
     .map(node => (isVNode(node) ? serializeVNode(node) : ''))
     .join('')
 }
 
+function prettyStringify(value: unknown, indent = 2): string {
+  try {
+    return JSON.stringify(value, null, indent)
+  }
+  catch {
+    return String(value)
+  }
+}
+
+function toKebabCase(str: string): string {
+  return str.replace(/([A-Z])/g, '-$1').toLowerCase()
+}
+
 export function useEnhancedPreview(
   props: UseEnhancedPreviewProps,
   emit: (event: string, ...args: unknown[]) => void,
+  options: CodeGenOptions = {},
 ) {
+  const {
+    fullVueFile = false,
+    kebabCase = true,
+    withComments = false,
+    eventNameToHandler = {},
+    specialDirectives = {},
+    slotProps = {},
+  } = options
+
   const copyButtonText = ref('📋 Copy')
   const isFrozen = ref(false)
   const frozenCode = ref('')
@@ -125,7 +131,6 @@ export function useEnhancedPreview(
   const mergedProps = toRefs(props)
   const slots = useSlots()
 
-  // Список "разрешённых" Vue-событий (прокидываем через emit)
   const customEmits = computed(() => props.emits || [])
   const emitEvent = (eventName: string, ...args: unknown[]) => {
     if (customEmits.value.includes(eventName)) {
@@ -133,25 +138,27 @@ export function useEnhancedPreview(
     }
   }
 
-  // Следим за props (на случай v-model:xxx и т.д.)
+  // Watch для v-model:xxx
   const stopWatcher: WatchStopHandle = watch(
     () => mergedProps.props?.value,
     (newProps) => {
       Object.entries(newProps ?? []).forEach(([key, value]) => {
-        // e.g. if key === 'v-model:foo', then event is 'update:foo'
-        emitEvent(`update:${key.replace('v-model:', '')}`, value)
+        if (key.startsWith('v-model:')) {
+          const eventName = 'update:' + key.replace('v-model:', '')
+          emitEvent(eventName, value)
+        }
       })
     },
     { deep: true },
   )
 
-  // Динамические пропсы (учёт v-model, v-model:checked и т.д.)
+  // Формируем dynamicProps
   const dynamicProps = computed(() => {
     const processedProps: Record<string, unknown> = {
       ...mergedProps.props?.value,
     }
 
-    // Поддержка v-model (modelValue)
+    // v-model (modelValue)
     if (mergedProps.modelValue?.value !== undefined) {
       processedProps.modelValue = mergedProps.modelValue.value
       processedProps['onUpdate:modelValue'] = (newVal: unknown) => {
@@ -159,7 +166,7 @@ export function useEnhancedPreview(
       }
     }
 
-    // Поддержка "v-model:checked", "v-model:foo", и т.п.
+    // v-model:foo
     for (const [key, value] of Object.entries(mergedProps.props?.value ?? {})) {
       if (key.startsWith('v-model:')) {
         const modelName = key.replace('v-model:', '')
@@ -178,35 +185,26 @@ export function useEnhancedPreview(
     return processedProps
   })
 
-  /**
-   * Дополнительные слушатели (listeners).
-   * В Vue 3 формат: onClick, onFocus, onInput и т.д.
-   * Если ключи в `props.listeners` — это `click`, `focus` (без on),
-   * то трансформируем в onClick, onFocus.
-   */
+  // Слушатели + emits
   const dynamicListeners = computed<Record<string, (...args: unknown[]) => void>>(() => {
     const result: Record<string, (...args: unknown[]) => void> = {}
     const userListeners = mergedProps.listeners?.value || {}
 
-    // 1) Добавляем emitEvent-события (для случаев, когда eventName объявлен в emits)
+    // emits
     customEmits.value.forEach((eventName) => {
-      // В шаблонах Vue: @foo -> onFoo
       const capitalized = eventName.charAt(0).toUpperCase() + eventName.slice(1)
       result[`on${capitalized}`] = (...args: unknown[]) => {
         emitEvent(eventName, ...args)
       }
     })
 
-    // 2) Мёржим с пользовательскими слушателями (переданными через props.listeners)
-    //    Для удобства поддержим оба варианта: 'click' / 'onClick'
+    // Пользовательские слушатели
     for (const [key, handler] of Object.entries(userListeners)) {
       if (!key.startsWith('on')) {
-        // Превращаем 'click' -> 'onClick'
         const capitalized = key.charAt(0).toUpperCase() + key.slice(1)
         result[`on${capitalized}`] = handler
       }
       else {
-        // если уже 'onClick', то просто прокидываем
         result[key] = handler
       }
     }
@@ -214,25 +212,19 @@ export function useEnhancedPreview(
     return result
   })
 
-  // Рендерим компонент
+  // Собираем итоговый VNode
   const renderedComponent = computed<VNode>(() => {
-    // Вместе: dynamicProps + dynamicListeners
     const allProps = {
       ...dynamicProps.value,
       ...dynamicListeners.value,
     }
-
-    // Если компонент — строка (HTML-тег)
     if (typeof mergedProps.component.value === 'string') {
       return h(mergedProps.component.value, allProps, slots)
     }
-    // Иначе Vue-компонент
     return h(mergedProps.component.value as Component, allProps, slots)
   })
 
-  /**
-   * Для генерации кода — учитываем слоты и то, что сейчас "заморожено" или нет
-   */
+  // Сериализация слотов
   const slotContents = computed<Record<string, string>>(() => {
     const result: Record<string, string> = {}
     for (const slotName of Object.keys(slots)) {
@@ -242,63 +234,250 @@ export function useEnhancedPreview(
     return result
   })
 
+  // ----------------------------------
+  // Генерация КОДА
+  // ----------------------------------
+
   const generatedCode = computed(() => {
     if (isFrozen.value) {
-      // If code is frozen, we return the stored version
       return frozenCode.value
     }
 
-    function formatValue(key: string, value: unknown) {
-      if (typeof value === 'function') {
-        return `  :${key}="\n    ${value.toString()}\n  "`
-      }
-      if (typeof value === 'boolean' || typeof value === 'number') {
-        return `  :${key}="${value}"`
-      }
-      else if (typeof value === 'string') {
-        return `  ${key}="${value}"`
-      }
-      else if (typeof value === 'object') {
-        return `  :${key}="${JSON.stringify(value)}"`
-      }
-      return `  :${key}="${value}"`
-    }
-
-    // Пропы
-    const propLines = Object.entries(dynamicProps.value)
-      .map(([key, value]) => formatValue(key, value))
-      .join('\n')
-
-    // События из emits
-    const eventLines = (props.emits || [])
-      .map(event => `  @${event}="handler"`)
-      .join('\n')
-
-    // Слоты
-    const slotLines = Object.keys(slotContents.value)
-      .map((slotName) => {
-        const content = slotContents.value[slotName] || '...'
-        return `  <template #${slotName}>${content}</template>`
-      })
-      .join('\n')
-
-    // Identify component name (if available)
-    const componentName
+    // Имя компонента
+    const compName
       = props.name
-        || (typeof props.component !== 'string'
-          && ((props.component as DefineComponent).name
-            || (props.component as DefineComponent).__name))
+        || (typeof props.component === 'string'
+          ? props.component
+          : (props.component as DefineComponent)?.name
+            || (props.component as DefineComponent)?.__name)
           || 'UnknownComponent'
 
-    // Construct final code
-    return `<${componentName}
-${propLines}
-${eventLines ? `${eventLines}\n` : ''}>
-${slotLines ? slotLines + '\n' : ''}
-</${componentName}>`
+    // Собираем (onUpdate:xxx) => для v-model
+    const onUpdates: Record<string, boolean> = {}
+    Object.keys(dynamicProps.value).forEach((k) => {
+      if (k.startsWith('onUpdate:')) {
+        onUpdates[k.slice('onUpdate:'.length)] = true
+      }
+    })
+
+    // Массив для будущих v-model переменных (только если fullVueFile=true)
+    const vModelVars: Array<{
+      key: string
+      varName: string
+      initialValue: unknown
+    }> = []
+
+    /** Проверяем, не занята ли переменная (чтобы не было дублей) */
+    const usedVarNames = new Set<string>()
+    function getUniqueVarName(base: string): string {
+      let candidate = base
+      let i = 2
+      while (usedVarNames.has(candidate)) {
+        candidate = base + i
+        i++
+      }
+      usedVarNames.add(candidate)
+      return candidate
+    }
+
+    /**
+     * Генерация строки пропса/директивы
+     * Возвращает null, если проп нужно пропустить
+     */
+    function propToTemplateAttr(key: string, val: unknown): string | null {
+      // 1) Спец-директива
+      if (specialDirectives[key]) {
+        return `${specialDirectives[key]}="${String(val)}"`
+      }
+
+      // 2) Пара (modelValue + onUpdate:modelValue) => v-model
+      if (key === 'modelValue' && onUpdates['modelValue']) {
+        // В режиме fullVueFile -> заведём отдельную переменную
+        if (fullVueFile) {
+          const varName = getUniqueVarName('componentValue')
+          vModelVars.push({
+            key,
+            varName,
+            initialValue: val,
+          })
+          // В template => v-model="componentValue"
+          return `v-model="${varName}"`
+        }
+        else {
+          // Обычное поведение: v-model="(текущее значение)"
+          return `v-model="${String(val)}"`
+        }
+      }
+
+      // 3) Пара (foo + onUpdate:foo) => v-model:foo
+      if (onUpdates[key]) {
+        if (fullVueFile) {
+          const varName = getUniqueVarName(key)
+          vModelVars.push({
+            key,
+            varName,
+            initialValue: val,
+          })
+          return `v-model:${key}="${varName}"`
+        }
+        else {
+          return `v-model:${key}="${String(val)}"`
+        }
+      }
+
+      // 4) Пропуск onUpdate:... (чтобы не было :on-update:model-value)
+      if (key.startsWith('onUpdate:')) {
+        return null
+      }
+
+      // 6) Вычисляем имя атрибута
+      const attrName = kebabCase ? toKebabCase(key) : key
+
+      // 7) Форматируем значение
+      if (typeof val === 'function') {
+        const fnText = val.toString().replace(/^/gm, '  ')
+        return `:${attrName}="\n${fnText}\n"`
+      }
+      else if (typeof val === 'object' && val !== null) {
+        const json = prettyStringify(val, 2).replace(/^/gm, '    ')
+        return `:${attrName}="\n${json}\n  "`
+      }
+      else if (typeof val === 'boolean' || typeof val === 'number') {
+        return `:${attrName}="${val}"`
+      }
+      else if (typeof val === 'string') {
+        return `${attrName}="${val}"`
+      }
+      return `:${attrName}="${String(val)}"`
+    }
+
+    // Собираем пропы
+    const propLines: string[] = []
+    Object.entries(dynamicProps.value).forEach(([key, val]) => {
+      const line = propToTemplateAttr(key, val)
+      if (line) {
+        if (withComments) {
+          propLines.push(`  <!-- prop: ${key} -->`)
+        }
+        propLines.push(`  ${line}`)
+      }
+    })
+
+    // Собираем события из emits (не считая update:..., уже учтено в v-model)
+    const eventLines: string[] = []
+    for (const eventName of props.emits || []) {
+      if (eventName.startsWith('update:')) {
+        continue
+      }
+      const handlerName = eventNameToHandler[eventName] || 'handler'
+      if (withComments) {
+        eventLines.push(`  <!-- event: ${eventName} -->`)
+      }
+      const eventAttr = kebabCase ? toKebabCase(eventName) : eventName
+      eventLines.push(`  @${eventAttr}="${handlerName}"`)
+    }
+
+    // Слоты
+    const slotLines: string[] = []
+    for (const [slotName, content] of Object.entries(slotContents.value)) {
+      const propsArr = slotProps[slotName] || []
+      const slotPropsString = propsArr.length
+        ? `{ ${propsArr.join(', ')} }`
+        : ''
+      if (content.trim()) {
+        slotLines.push(
+          `        <template #${slotName}${
+            slotPropsString ? `="${slotPropsString}"` : ''
+          }>`,
+        )
+        const indented = content
+          .split('\n')
+          .map(line => '    ' + line)
+          .join('\n')
+        slotLines.push(indented)
+        slotLines.push(`  </template>`)
+      }
+      else {
+        slotLines.push(
+          `  <template #${slotName}${
+            slotPropsString ? `="${slotPropsString}"` : ''
+          }></template>`,
+        )
+      }
+    }
+
+    // Формируем итоговый тег
+    let tagCode = ''
+    const allAttrs = [...propLines, ...eventLines]
+    if (slotLines.length === 0) {
+      // Нет слотов => самозакрывающийся
+      tagCode = `   <${compName}\n      ${allAttrs.join('\n      ')}\n      />`
+    }
+    else {
+      tagCode = `   <${compName}\n      ${allAttrs.join('\n      ')}\n      >\n`
+      tagCode += slotLines.join('\n      ') + '\n'
+      tagCode += `      </${compName}>`
+    }
+
+    // Если fullVueFile = true => оборачиваем <template> + <script setup>
+    if (fullVueFile) {
+      // Формируем блок объявлений в <script setup> для v-model переменных
+      let scriptLines: string[] = []
+      if (vModelVars.length) {
+        scriptLines = vModelVars.map(({ varName, initialValue }) => {
+          // Превращаем initialValue в сериализованную строку
+          // (Например, "Some text", 123, { foo: "bar" }, ...)
+          const valueSerialized
+            = typeof initialValue === 'string'
+              ? JSON.stringify(initialValue)
+              : prettyStringify(initialValue, 0)
+          return `const ${varName} = ref(${valueSerialized})`
+        })
+      }
+
+      // При желании можно добавить заглушку для "handler"
+      // (вдруг есть события)
+      let hasAnyEvent = false
+      for (const eventName of props.emits || []) {
+        if (!eventName.startsWith('update:')) {
+          hasAnyEvent = true
+          break
+        }
+      }
+
+      const handlerBlock = hasAnyEvent
+        ? `
+function handler(...args) {
+  console.log('Event from ${compName}', ...args)
+}
+`.trim()
+        : ''
+
+      const finalScript = `
+<script setup>
+import ${compName} from '@/components/${compName}.vue'
+import { ref } from 'vue'
+
+// Auto-generated model refs:
+${scriptLines.join('\n')}
+
+${handlerBlock}
+</script>`.trim()
+
+      return `
+<template>
+  ${tagCode}
+</template>
+
+${finalScript}
+      `.trim()
+    }
+    else {
+      return tagCode
+    }
   })
 
-  // Копирование кода
+  // Копирование
   const copyCode = async () => {
     try {
       await navigator.clipboard.writeText(generatedCode.value)
@@ -312,7 +491,7 @@ ${slotLines ? slotLines + '\n' : ''}
     }
   }
 
-  // Freeze/Unfreeze
+  // Freeze/unfreeze
   const toggleFreeze = () => {
     if (!isFrozen.value) {
       frozenCode.value = generatedCode.value
