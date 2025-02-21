@@ -18,7 +18,7 @@
       :class="inputClass"
       @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
       @click="$emit('click')"
-    />
+    >
 
     <!-- Слот append -->
     <slot name="append" />
