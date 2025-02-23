@@ -154,6 +154,211 @@ Because it is so flexible, you can create a near-complete “in-component Storyb
 
 ---
 
+
+## Using `componentPropsMeta` for Automatic Props Editing
+
+One powerful addition to the **Components Book** workflow is the optional `componentPropsMeta` feature. By passing a **metadata object** that describes each prop’s **input type** (`text`, `select`, `checkbox`, `number`, etc.) and any **available options**, you unlock a **dynamic Props Editor** within each `<EnhancedPreview>` block.
+
+### 1. Basic Concept
+
+- **What is `componentPropsMeta`?**  
+  It is an **object** where **keys** match the **names of your props**, and **values** describe how you want those props to be edited. For example:
+
+  ```js
+  const componentPropsMeta = {
+    label: {
+      fieldType: 'text', // a simple text field
+    },
+    variant: {
+      fieldType: 'select',
+      options: ['primary', 'secondary', 'danger'], // must choose one
+    },
+    disabled: {
+      fieldType: 'checkbox', // true/false
+    },
+    items: {
+      fieldType: 'number', // numeric input
+    },
+  }
+  ```
+
+- **How does it work?**  
+  When `EnhancedPreview` detects you have provided a `componentPropsMeta` object, it renders a `<PropsEditor>` panel (if enabled) that automatically creates the correct input controls for each prop:
+  - `fieldType: 'text'` → A standard text input.
+  - `fieldType: 'select'` → A dropdown `<select>` (requires an `options` array).
+  - `fieldType: 'checkbox'` → A checkbox input (for booleans).
+  - `fieldType: 'number'` → A numeric input field.
+
+- **Optional**: If you do **not** pass `componentPropsMeta`, or you set it to `null`, then **the editor does not appear** (unless you implement your own custom logic). This is helpful for scenarios where you want a read-only or static preview.
+
+### 2. Declaring `componentPropsMeta`
+
+In your `.stories.vue` file (or anywhere else you configure `<EnhancedPreview>`), you can define and pass in `componentPropsMeta`. For example:
+
+```vue
+<script setup>
+import MyButton from './MyButton.vue'
+
+const buttonPropsMeta = {
+  label: {
+    fieldType: 'text',
+  },
+  variant: {
+    fieldType: 'select',
+    options: ['primary', 'secondary', 'danger'],
+  },
+  disabled: {
+    fieldType: 'checkbox',
+  },
+  size: {
+    fieldType: 'select',
+    options: ['sm', 'md', 'lg'],
+  },
+}
+</script>
+
+<template>
+  <!-- Will automatically render an editor for 'label', 'variant', 'disabled', 'size' -->
+  <EnhancedPreview
+    :component="MyButton"
+    :props="{ label: 'Example', variant: 'primary', disabled: false, size: 'md' }"
+    :componentPropsMeta="buttonPropsMeta"
+  />
+</template>
+```
+
+With this, an interactive panel appears (assuming the Editor is turned on in your `EnhancedPreview`), displaying:
+- A **text field** for `label`
+- A **select dropdown** for `variant` (with `primary`, `secondary`, `danger`)
+- A **checkbox** for `disabled`
+- Another **select dropdown** for `size` (`sm`, `md`, `lg`)
+
+When the user changes these inputs, it automatically updates the live preview **and** the code snippet in real time.
+
+### 3. Supported `fieldType` Values
+
+The built-in `<PropsEditor>` typically recognizes the following:
+
+| `fieldType`  | UI Control                    | Notes                                                                                    |
+|--------------|-------------------------------|------------------------------------------------------------------------------------------|
+| `'text'`     | A standard text `<input />`   | For general string props, placeholders, or anything that needs free text input           |
+| `'select'`   | A `<select>` with `<option>`  | Must also provide an `options` array, e.g. `{ fieldType: 'select', options: ['a','b'] }` |
+| `'checkbox'` | A `<input type="checkbox" />` | For boolean props (`true`/`false`)                                                       |
+| `'number'`   | A `<input type="number" />`   | For numeric props (model is parsed as number)                                            |
+
+> **Default fallback**: If a prop does not match any known `fieldType`, it defaults to a `'text'` field.
+
+### 4. Merging with Manual Controls
+
+Sometimes you may have your **own** fields in the story to manually set props, as well as using `componentPropsMeta`. Both will **synchronize** since they update the same reactive data under the hood. For example:
+
+```vue
+<script setup>
+import MyButton from './MyButton.vue'
+import { ref } from '#imports'
+
+const label = ref('Click Me')
+const variant = ref('primary')
+const size = ref('md')
+
+const buttonPropsMeta = {
+  label: { fieldType: 'text' },
+  variant: {
+    fieldType: 'select',
+    options: ['primary', 'secondary', 'danger']
+  },
+  size: {
+    fieldType: 'select',
+    options: ['sm', 'md', 'lg']
+  },
+}
+</script>
+
+<template>
+  <div>
+    <!-- Manual controls -->
+    <label>
+      Label
+      <input v-model="label" type="text" />
+    </label>
+
+    <label>
+      Variant
+      <select v-model="variant">
+        <option value="primary">Primary</option>
+        <option value="secondary">Secondary</option>
+        <option value="danger">Danger</option>
+      </select>
+    </label>
+
+    <label>
+      Size
+      <select v-model="size">
+        <option value="sm">Small</option>
+        <option value="md">Medium</option>
+        <option value="lg">Large</option>
+      </select>
+    </label>
+
+    <EnhancedPreview
+      :component="MyButton"
+      :props="{ label, variant, size }"
+      :componentPropsMeta="buttonPropsMeta"
+    />
+  </div>
+</template>
+```
+
+Here:
+- The manual `<label><input>` blocks control the same reactive `label`, `variant`, `size`.
+- The `componentPropsMeta` in `EnhancedPreview` also controls the same props.
+- Changing **either** the manual input or the generated editor from `PropsEditor` will reflect on the final preview.
+
+### 5. What if I omit `componentPropsMeta`?
+
+If you **do not** supply `componentPropsMeta` (or set it to `null`), the internal `PropsEditor` will **not** render. This is handy if you want a read-only or purely “static” preview of the component. For example:
+
+```vue
+<EnhancedPreview
+  :component="MyButton"
+  :props="{ label: 'Click Me', variant: 'primary' }"
+  :componentPropsMeta="null" <!-- or just omit it -->
+/>
+```
+
+No prop editor panel appears — it’s simply a static preview with the standard code snippet and spoiler functionality.
+
+### 6. Advanced or Custom Field Types
+
+By default, the provided `<PropsEditor>` handles the types `'text'`, `'select'`, `'checkbox'`, `'number'`. If you need **other** types of fields (like sliders, color pickers, radio buttons, date pickers, etc.), you can **fork** or extend the `<PropsEditor>` logic:
+
+1. Add a new `fieldType: 'slider'`.
+2. Render a `<input type="range" />`.
+3. Possibly pass extra metadata in your `componentPropsMeta`, like `{ min: 0, max: 100 }`.
+4. The rest of the logic remains the same (it would still emit `update:componentProps` etc.).
+
+### 7. Putting It All Together
+
+**`componentPropsMeta`** is a straightforward yet powerful way to turn your “static” component previews into **interactive, dynamic** experiences—very similar to how a small Storybook panel might function.
+
+1. **Pass** the metadata object to `<EnhancedPreview :componentPropsMeta="someMetaObj" />`.
+2. **Provide** matching keys for each prop you want to edit.
+3. **Choose** the `fieldType` best suited for that prop. If needed, add an `options` array for `select`.
+4. **Optionally** keep your existing manual controls or remove them entirely—both approaches are valid.
+
+---
+
+### Summary
+
+- `componentPropsMeta` is **fully optional**.
+- When provided, `<EnhancedPreview>` spawns a `<PropsEditor>` panel (if that feature is enabled).
+- You can define different input types (`text`, `select`, `checkbox`, `number`) and specify **lists of options** for selects.
+- If you omit or set `componentPropsMeta = null`, no in-preview editor will be shown (allowing for simpler or purely static previews).
+
+This flexibility lets you **quickly experiment with your components’ props** and produce self-documenting usage examples that keep your team and future maintainers well-informed.
+
+---
+
 # Enhanced usage(useEnhancedPreview)
 
 Below is an **advanced example** of how you can leverage `useEnhancedPreview` to gain complete control over a component’s state, events, and display. This approach requires a bit more work, but it allows you to integrate **fully custom store logic** or any other advanced patterns you need.
