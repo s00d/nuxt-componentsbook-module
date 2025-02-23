@@ -531,7 +531,6 @@ function handler(...args) {
 
       const finalScript = `
 <script setup>
-import ${compName} from '@/components/${compName}.vue'
 import { ref } from 'vue'
 
 // Auto-generated model refs:
