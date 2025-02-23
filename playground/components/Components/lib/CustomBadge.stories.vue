@@ -33,5 +33,6 @@ const variant = ref<'primary' | 'secondary'>('primary')
   <EnhancedPreview
     :component="CustomBadge"
     :props="{ text, variant }"
+    name="lib-custom-badge"
   />
 </template>

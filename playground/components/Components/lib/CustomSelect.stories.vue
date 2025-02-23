@@ -24,6 +24,7 @@ const handleChange = () => {
     :component="CustomSelect"
     :props="{ options }"
     :emits="['update:modelValue']"
+    name="lib-custom-select"
     @update:model-value="handleChange"
   />
 </template>

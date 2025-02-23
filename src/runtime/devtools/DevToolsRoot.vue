@@ -21,14 +21,9 @@ if (import.meta.client) {
 </script>
 
 <style scoped>
-/*
-  Лёгкая «карточка» вокруг текста. При желании
-  можно использовать другой фон, бордюр, тень и т.д.
-*/
 .change-file {
-  display: inline-block; /* Чтобы «карточка» обрезалась по тексту */
-  padding: 8px 12px;
-  background-color: #f8f9fa;
+  display: inline-block;
+  background-color: white;
   color: #333;
   font-family: 'Inter', 'Segoe UI', sans-serif;
   font-size: 14px;
@@ -36,12 +31,11 @@ if (import.meta.client) {
   border-radius: 6px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   margin: 16px;
+  padding: 60px;
   transition: background-color 0.2s ease-in-out;
-  cursor: default; /* или pointer, если планируете клик */
-}
-
-/* При наведении - лёгкое изменение фона (опционально) */
-.change-file:hover {
-  background-color: #eef1f3;
+  cursor: default;
+  width: 80%;
+  text-align: center;
+  font-weight: bold;
 }
 </style>

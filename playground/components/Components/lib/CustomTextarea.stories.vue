@@ -20,6 +20,7 @@ const handleInput = () => {
     :component="CustomTextarea"
     :props="{ placeholder }"
     :emits="['update:modelValue']"
+    name="lib-custom-textarea"
     @update:model-value="handleInput"
   />
 </template>

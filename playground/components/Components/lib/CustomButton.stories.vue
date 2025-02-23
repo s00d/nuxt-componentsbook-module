@@ -57,6 +57,7 @@ const handleClick = () => {
     :component="CustomButton"
     :props="{ label, size, variant, disabled }"
     :emits="['click']"
+    name="lib-custom-button"
     @click="handleClick"
   />
 </template>

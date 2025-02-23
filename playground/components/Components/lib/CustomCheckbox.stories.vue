@@ -20,6 +20,7 @@ const handleChange = () => {
     :component="CustomCheckbox"
     :props="{ label }"
     :emits="['update:modelValue']"
+    name="lib-custom-checkbox"
     @update:model-value="handleChange"
   />
 </template>

@@ -22,6 +22,7 @@ const {
   generatedCode,
 } = useEnhancedPreview(reactive({
   component: markRaw(CustomTextarea),
+  name: 'lib-custom-textarea',
   modelValue: modelValue,
   props: {
     placeholder: placeholder.value,
@@ -39,6 +40,7 @@ const {
   generatedCode: generatedCodeCustomBadge,
 } = useEnhancedPreview(reactive({
   component: markRaw(CustomBadge),
+  name: 'lib-custom-badge',
   props: {
     text: text.value,
     variant: variant.value,

@@ -18,6 +18,7 @@ const handleToggle = () => {
     v-model="modelValue"
     :component="CustomSwitch"
     :emits="['update:modelValue']"
+    name="lib-custom-switch"
     @update:model-value="handleToggle"
   />
 </template>

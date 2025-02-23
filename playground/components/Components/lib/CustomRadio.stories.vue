@@ -23,6 +23,7 @@ const handleChange = () => {
     :component="CustomRadio"
     :props="{ value: options[0].value, label: options[0].label }"
     :emits="['update:modelValue']"
+    name="lib-custom-radio"
     @update:model-value="handleChange"
   />
 
@@ -31,6 +32,7 @@ const handleChange = () => {
     :component="CustomRadio"
     :props="{ value: options[1].value, label: options[1].label }"
     :emits="['update:modelValue']"
+    name="lib-custom-radio"
     @update:model-value="handleChange"
   />
 </template>

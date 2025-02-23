@@ -93,7 +93,6 @@ const {
     fullVueFile: true,
     kebabCase: true,
     withComments: false,
-    // ... другие настройки
   },
 )
 
