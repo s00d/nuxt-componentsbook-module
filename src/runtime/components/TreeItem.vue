@@ -21,7 +21,6 @@
           <path d="M14 2v6h6" />
         </svg>
       </span>
-
       <span
         class="file-name"
         v-html="node.name"
@@ -115,16 +114,14 @@ const props = defineProps<{
   defaultExpanded?: boolean
 }>()
 
-const emit = defineEmits([
-  'fileSelected',
-])
+const emit = defineEmits(['fileSelected'])
 
 const isExpanded = ref(props.defaultExpanded || false)
 
-// Для выделения файла:
+/** Определяем, выбран ли этот файл */
 const isSelected = computed(() => props.selectedFile === props.node.fullPath.relativePath)
 
-// Отступ слева (визуальная вложенность)
+/** Отступ слева (визуальная вложенность) */
 const indentStyle = computed(() => ({
   paddingLeft: `${props.depth * 20 + 8}px`,
 }))
@@ -153,88 +150,67 @@ watch(
 </script>
 
 <style scoped>
-.file-item {
-  padding: 1px 12px;
-  margin: 2px 0;
-  cursor: pointer;
+/* Общие настройки шрифтов и цветов можно адаптировать под свой проект */
+.file-item,
+.folder-header {
   display: flex;
   align-items: center;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   font-size: 14px;
-  color: #334155;
-  background: white;
+  color: #334155; /* slate-700 */
+  background: #fff;
   border-radius: 6px;
-  transition: all 0.2s;
-  border: 1px solid transparent;
+  border: 1px solid transparent; /* для hover/selected выделения */
+  margin: 2px 0;
+  padding: 4px 12px;
+  cursor: pointer;
+  /* Лёгкий переход для hover/expanded/selected состояний */
+  transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
 }
 
-.file-item:hover {
-  background: #f1f5f9;
-  transform: translateX(2px);
+/* При наведении добавляем подсветку и небольшую тень */
+.file-item:hover,
+.folder-header:hover {
+  background: #f1f5f9; /* slate-100 */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
+/* Для выбранного файла: голубая подсветка */
 .file-item.selected {
-  background: #eff6ff;
-  border-color: #3b82f6;
-  color: #1d4ed8;
+  background: #eff6ff; /* blue-50 */
+  border-color: #3b82f6; /* blue-500 */
+  color: #1d4ed8; /* blue-700 */
   font-weight: 500;
 }
 
-.file-button {
-  margin-left: auto;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  padding: 4px;
-  width: 26px;
-}
-
-.file-button:hover {
-  background-color: #e2e8f0;
-  border-radius: 4px;
-}
-
-.folder-header {
-  padding: 1px 12px;
-  margin: 2px 0;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  font-size: 14px;
-  color: #334155;
-  background: white;
-  border-radius: 6px;
-  transition: all 0.2s;
-  border: 1px solid transparent;
-}
-
-.folder-header:hover {
-  background: #f1f5f9;
-  transform: translateX(2px);
-}
-
+/* Заголовок папки в «расширенном» состоянии: выделяем цветом и жирностью */
 .folder-header.expanded {
   font-weight: 500;
-  color: #1e40af;
+  color: #1e40af; /* blue-800 */
 }
 
+/* Иконки */
 .icon {
   width: 18px;
   height: 18px;
   margin-right: 8px;
   flex-shrink: 0;
+  stroke: currentColor;
 }
 
+/* Иконка стрелки (chevron) рядом с папкой */
 .chevron .icon {
   width: 14px;
   height: 14px;
   margin-right: 10px;
 }
 
+/* Дополнительный отступ для дочерних элементов (отображается как «ветка» дерева) */
 .folder-children {
   margin-left: 12px;
-  border-left: 2px solid #e2e8f0;
+  border-left: 2px solid #e2e8f0; /* slate-200 */
   padding-left: 12px;
+  /* Можно добавить небольшой отступ сверху, если нужно */
+  /* margin-top: 4px; */
 }
 </style>
