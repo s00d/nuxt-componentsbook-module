@@ -2,9 +2,26 @@
 import MyButton from './MyButton3.vue'
 import { ref } from '#imports'
 
+// Реактивные пропсы
 const label = ref('Click Me')
 const size = ref('md')
 const variant = ref('primary')
+
+// МЕТАДАННЫЕ (componentPropsMeta):
+// Определяем, какие типы инпутов хотим в PropsEditor
+const componentPropsMeta = {
+  label: {
+    fieldType: 'text',
+  },
+  size: {
+    fieldType: 'select',
+    options: ['sm', 'md', 'lg'],
+  },
+  variant: {
+    fieldType: 'select',
+    options: ['primary', 'secondary', 'danger'],
+  },
+}
 </script>
 
 <template>
@@ -14,6 +31,7 @@ const variant = ref('primary')
 
   <h2>🛠 Interactive Controls</h2>
   <div class="controls">
+    <!-- Ручное управление пропсами: label, size, variant -->
     <label>
       Label:
       <input
@@ -41,6 +59,7 @@ const variant = ref('primary')
     </label>
   </div>
 
+  <!-- EnhancedPreview -->
   <EnhancedPreview
     :component="MyButton"
     :props="{
@@ -48,6 +67,7 @@ const variant = ref('primary')
       size,
       variant,
     }"
+    :component-props-meta="componentPropsMeta"
   />
 </template>
 

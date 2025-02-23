@@ -3,7 +3,10 @@ import CustomInput from './MyInput.vue'
 import MyButton from './MyButton.vue'
 import { ref } from '#imports'
 
+// Модель (v-model)
 const modelValue = ref('')
+
+// Ваши пропсы (реактивные)
 const label = ref('Enter Text')
 const type = ref<'text' | 'password' | 'email' | 'number'>('text')
 const placeholder = ref('Type something...')
@@ -13,8 +16,37 @@ const helperText = ref('This is a helper text.')
 const size = ref<'sm' | 'md' | 'lg'>('md')
 const slotLabel = ref('Label')
 
+// Метод, реагирующий на клик
 const handleClick = () => {
   console.log('click')
+}
+
+// МЕТАДАННЫЕ: описание типов полей
+// (связываем название пропа -> объект { fieldType, options? })
+const componentPropsMeta = {
+  'label': {
+    fieldType: 'text',
+  },
+  'type': {
+    fieldType: 'select',
+    options: ['text', 'password', 'email', 'number'],
+  },
+  'placeholder': {
+    fieldType: 'text',
+  },
+  'disabled': {
+    fieldType: 'checkbox',
+  },
+  'readonly': {
+    fieldType: 'checkbox',
+  },
+  'helper-text': {
+    fieldType: 'text',
+  },
+  'size': {
+    fieldType: 'select',
+    options: ['sm', 'md', 'lg'],
+  },
 }
 </script>
 
@@ -23,67 +55,7 @@ const handleClick = () => {
     The <code>CustomInput</code> component is a versatile input field with multiple configurations.
   </p>
 
-  <h2>🛠 Interactive Controls</h2>
-  <div class="controls">
-    <label>
-      Label:
-      <input
-        v-model="label"
-        type="text"
-      >
-    </label>
-
-    <label>
-      Type:
-      <select v-model="type">
-        <option value="text">Text</option>
-        <option value="password">Password</option>
-        <option value="email">Email</option>
-        <option value="number">Number</option>
-      </select>
-    </label>
-
-    <label>
-      Placeholder:
-      <input
-        v-model="placeholder"
-        type="text"
-      >
-    </label>
-
-    <label>
-      <input
-        v-model="disabled"
-        type="checkbox"
-      > Disabled
-    </label>
-
-    <label>
-      <input
-        v-model="readonly"
-        type="checkbox"
-      > Readonly
-    </label>
-
-    <label>
-      Helper Text:
-      <input
-        v-model="helperText"
-        type="text"
-      >
-    </label>
-
-    <label>
-      Size:
-      <select v-model="size">
-        <option value="sm">Small</option>
-        <option value="md">Medium</option>
-        <option value="lg">Large</option>
-      </select>
-    </label>
-  </div>
-
-  <!-- Используем EnhancedPreview, чтобы отрендерить CustomInput и автоматически сгенерировать код. -->
+  <!-- Наш EnhancedPreview -->
   <EnhancedPreview
     v-model="modelValue"
     :component="CustomInput"
@@ -96,10 +68,11 @@ const handleClick = () => {
       'helper-text': helperText,
       size,
     }"
+    :component-props-meta="componentPropsMeta"
     :emits="['click']"
     @click="handleClick"
   >
-    <!-- Пример использования слота append -->
+    <!-- Пример слота append -->
     <template #append>
       test slot
       <MyButton :label="slotLabel">
