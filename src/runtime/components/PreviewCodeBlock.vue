@@ -11,7 +11,7 @@
     <a
       class="copy-link"
       href="#"
-      @click.prevent="$emit('copy')"
+      @click.prevent="copyCode"
     >
       {{ copyButtonText }}
     </a>
@@ -22,13 +22,39 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { watchEffect, ref } from 'vue'
+import * as prettier from 'prettier/standalone'
+import * as htmlParser from 'prettier/parser-html'
 import hljs from 'highlight.js'
-import javascript from 'highlight.js/lib/languages/javascript'
+import xml from 'highlight.js/lib/languages/xml'
 import 'highlight.js/styles/github-dark.css'
 
-hljs.registerLanguage('javascript', javascript)
+hljs.registerLanguage('xml', xml)
 
+const props = defineProps<{
+  code: string
+  showFrozen: boolean
+  isFrozen: boolean
+}>()
+
+defineEmits(['copy', 'toggle-freeze'])
+
+const formattedCode = ref('')
+const highlightedCode = ref('')
+const copyButtonText = ref('📋 Copy')
+
+async function copyCode() {
+  try {
+    await navigator.clipboard.writeText(formattedCode.value)
+    copyButtonText.value = '✅ Copied!'
+    setTimeout(() => {
+      copyButtonText.value = '📋 Copy'
+    }, 5000)
+  }
+  catch (err) {
+    console.error('Failed to copy:', err)
+  }
+}
 function removeLeadingIndent(str: string): string {
   const lines = str.split('\n')
   let minIndent = Infinity
@@ -50,19 +76,20 @@ function removeLeadingIndent(str: string): string {
   return lines.map(line => !line.trim() ? '' : line.slice(minIndent)).join('\n')
 }
 
-const props = defineProps<{
-  code: string
-  showFrozen: boolean
-  isFrozen: boolean
-  copyButtonText: string
-}>()
-
-defineEmits(['copy', 'toggle-freeze'])
-
-const highlightedCode = computed(() => {
-  const normalizedCode = removeLeadingIndent(props.code)
-  const result = hljs.highlight('javascript', normalizedCode)
-  return result.value
+watchEffect(async () => {
+  try {
+    const normalizedCode = removeLeadingIndent(props.code)
+    const fc = await prettier.format(normalizedCode, {
+      parser: 'html',
+      plugins: [htmlParser],
+    })
+    const result = hljs.highlight(fc, { language: 'xml', ignoreIllegals: true })
+    formattedCode.value = fc
+    highlightedCode.value = result.value
+  }
+  catch (e) {
+    console.error(e)
+  }
 })
 </script>
 
