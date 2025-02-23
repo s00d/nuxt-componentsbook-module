@@ -102,7 +102,10 @@ const handleClick = () => {
     <!-- Пример использования слота append -->
     <template #append>
       test slot
-      <MyButton :label="slotLabel" />
+      <MyButton :label="slotLabel">
+        <div>block</div>
+        slot text
+      </MyButton>
     </template>
   </EnhancedPreview>
 </template>

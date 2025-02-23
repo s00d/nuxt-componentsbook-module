@@ -4,6 +4,7 @@
     @click="handleClick"
   >
     {{ label }}
+    <slot />
   </button>
 </template>
 
