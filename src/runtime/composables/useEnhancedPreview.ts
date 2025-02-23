@@ -7,7 +7,6 @@ import {
   h,
   onUnmounted,
   useSlots,
-  isVNode,
   type WatchStopHandle,
   type Component,
   type DefineComponent,
@@ -15,6 +14,8 @@ import {
   type VNodeArrayChildren,
   type Ref,
 } from 'vue'
+
+import { createTextVNode, isVNode } from 'vue'
 
 interface UseEnhancedPreviewProps {
   title?: string
@@ -45,6 +46,11 @@ interface CodeGenOptions {
 /** Утилиты */
 
 function getNodeTag(node: VNode): string {
+  // Проверяем, не текстовый ли это узел (Vue 3):
+  if (typeof node.type === 'symbol' && node.type.description === 'v-txt') {
+    return '#text'
+  }
+  // Дальше - компонент/строка:
   if (typeof node.type === 'string') {
     return node.type
   }
@@ -52,15 +58,70 @@ function getNodeTag(node: VNode): string {
   return comp?.name || comp?.__name || 'AnonymousComponent'
 }
 
+function getVNodeChildrenArray(node: VNode): VNode[] {
+  // 1) Если node.children — массив (VNodeArrayChildren),
+  //    разворачиваем и превращаем каждый элемент (в т.ч. строки) в VNode
+  if (Array.isArray(node.children)) {
+    return node.children
+      .flatMap((child) => {
+        if (Array.isArray(child)) {
+          // Вдруг вложенные массивы (VNodeArrayChildren допускает вложенность)
+          return child.map(item =>
+            isVNode(item) ? item : createTextVNode(String(item)),
+          )
+        }
+        else {
+          // child — либо VNode, либо примитив
+          return isVNode(child) ? child : createTextVNode(String(child))
+        }
+      })
+  }
+
+  // 2) Если объект слотов
+  if (typeof node.children === 'object' && node.children !== null) {
+    const slots = node.children as Record<string, unknown>
+    if (typeof slots.default === 'function') {
+      // слоты.default() возвращает VNodeArrayChildren
+      const slotResult = slots.default()
+      // Рекурсивно приводим к VNode[]
+      return Array.isArray(slotResult)
+        ? slotResult.map(item =>
+            isVNode(item) ? item : createTextVNode(String(item)),
+          )
+        : isVNode(slotResult)
+          ? [slotResult]
+          : [createTextVNode(String(slotResult))]
+    }
+  }
+
+  // 3) Если это строка/число и т.п.
+  if (
+    typeof node.children === 'string'
+    || typeof node.children === 'number'
+  ) {
+    return [createTextVNode(String(node.children))]
+  }
+
+  return []
+}
+
 function serializeVNode(node: VNode, depth = 0): string {
   if (!node) return ''
-  if (typeof node.children === 'string') {
-    return node.children
-  }
-  const childArray = Array.isArray(node.children) ? node.children : []
   const tagName = getNodeTag(node)
   const indent = '  '.repeat(depth)
 
+  // Если это "текстовый" VNode (node.type === Text)
+  // и node.children — строка, просто вернуть эту строку:
+  // (В зависимости от того, как Vue формирует текстовые узлы)
+  if (tagName === '#text') {
+    // node.children может быть строка или число
+    return String(node.children) + '\n'
+  }
+
+  // Соберём дочерние узлы
+  const childArray = getVNodeChildrenArray(node)
+
+  // Собираем props...
   const propsString = node.props
     ? Object.entries(node.props)
         .map(([key, val]) => {
@@ -81,12 +142,14 @@ function serializeVNode(node: VNode, depth = 0): string {
     : ''
 
   if (childArray.length) {
+    // Рекурсивно сериализуем дочерние узлы
     const childrenSerialized = childArray
       .map(child => (isVNode(child) ? serializeVNode(child, depth + 1) : ''))
       .join('')
     return `${indent}<${tagName}${propsString}>${childrenSerialized}</${tagName}>\n`
   }
   else {
+    // Самозакрывающийся
     return `${indent}<${tagName}${propsString} />\n`
   }
 }
@@ -124,7 +187,6 @@ export function useEnhancedPreview(
     slotProps = {},
   } = options
 
-  const copyButtonText = ref('📋 Copy')
   const isFrozen = ref(false)
   const frozenCode = ref('')
 
@@ -194,7 +256,9 @@ export function useEnhancedPreview(
     customEmits.value.forEach((eventName) => {
       const capitalized = eventName.charAt(0).toUpperCase() + eventName.slice(1)
       result[`on${capitalized}`] = (...args: unknown[]) => {
-        emitEvent(eventName, ...args)
+        if (customEmits.value.includes(eventName)) {
+          emit(eventName, ...args)
+        }
       }
     })
 
@@ -351,7 +415,7 @@ export function useEnhancedPreview(
       return `:${attrName}="${String(val)}"`
     }
 
-    // Собираем пропы
+    // 1) Собираем пропы
     const propLines: string[] = []
     Object.entries(dynamicProps.value).forEach(([key, val]) => {
       const line = propToTemplateAttr(key, val)
@@ -363,7 +427,7 @@ export function useEnhancedPreview(
       }
     })
 
-    // Собираем события из emits (не считая update:..., уже учтено в v-model)
+    // 2) Собираем события из emits (не считая update:..., уже учтено в v-model)
     const eventLines: string[] = []
     for (const eventName of props.emits || []) {
       if (eventName.startsWith('update:')) {
@@ -377,47 +441,62 @@ export function useEnhancedPreview(
       eventLines.push(`  @${eventAttr}="${handlerName}"`)
     }
 
-    // Слоты
+    // 3) Слоты
     const slotLines: string[] = []
     for (const [slotName, content] of Object.entries(slotContents.value)) {
       const propsArr = slotProps[slotName] || []
       const slotPropsString = propsArr.length
         ? `{ ${propsArr.join(', ')} }`
         : ''
+
       if (content.trim()) {
         slotLines.push(
-          `        <template #${slotName}${
-            slotPropsString ? `="${slotPropsString}"` : ''
-          }>`,
+          `<template #${slotName}${slotPropsString ? `="${slotPropsString}"` : ''}>`,
         )
         const indented = content
           .split('\n')
           .map(line => '    ' + line)
           .join('\n')
         slotLines.push(indented)
-        slotLines.push(`  </template>`)
+        slotLines.push(`</template>`)
       }
       else {
         slotLines.push(
-          `  <template #${slotName}${
-            slotPropsString ? `="${slotPropsString}"` : ''
-          }></template>`,
+          `<template #${slotName}${slotPropsString ? `="${slotPropsString}"` : ''}></template>`,
         )
       }
     }
 
-    // Формируем итоговый тег
-    let tagCode = ''
+    // 4) Собираем финальный «тег» (построчно, без одной большой переменной)
     const allAttrs = [...propLines, ...eventLines]
-    if (slotLines.length === 0) {
+    const lines: string[] = []
+
+    // ОТКРЫВАЕМ тег:
+    lines.push(`<${compName}`)
+    // Вставляем атрибуты (если есть), отступ 6
+    allAttrs.forEach((attr) => {
+      lines.push(attr)
+    })
+
+    if (!slotLines.length) {
       // Нет слотов => самозакрывающийся
-      tagCode = `   <${compName}\n      ${allAttrs.join('\n      ')}\n      />`
+      lines.push(`/>`)
     }
     else {
-      tagCode = `   <${compName}\n      ${allAttrs.join('\n      ')}\n      >\n`
-      tagCode += slotLines.join('\n      ') + '\n'
-      tagCode += `      </${compName}>`
+      // Есть слоты -> закрываем открывающий тег '>'
+      lines.push(`>`)
+
+      // Вставляем слоты, каждый со смещением 6 (или 4 — на ваше усмотрение)
+      slotLines.forEach((line) => {
+        lines.push(line)
+      })
+
+      // Закрываем тег
+      lines.push(`</${compName}>`)
     }
+
+    // Собираем все строки в один текст
+    const finalTag = lines.join('\n')
 
     // Если fullVueFile = true => оборачиваем <template> + <script setup>
     if (fullVueFile) {
@@ -425,8 +504,6 @@ export function useEnhancedPreview(
       let scriptLines: string[] = []
       if (vModelVars.length) {
         scriptLines = vModelVars.map(({ varName, initialValue }) => {
-          // Превращаем initialValue в сериализованную строку
-          // (Например, "Some text", 123, { foo: "bar" }, ...)
           const valueSerialized
             = typeof initialValue === 'string'
               ? JSON.stringify(initialValue)
@@ -435,8 +512,7 @@ export function useEnhancedPreview(
         })
       }
 
-      // При желании можно добавить заглушку для "handler"
-      // (вдруг есть события)
+      // Проверяем, есть ли «обычные» события (кроме update:…), чтобы вставить handler
       let hasAnyEvent = false
       for (const eventName of props.emits || []) {
         if (!eventName.startsWith('update:')) {
@@ -466,30 +542,17 @@ ${handlerBlock}
 
       return `
 <template>
-  ${tagCode}
+${finalTag}
 </template>
 
 ${finalScript}
       `.trim()
     }
     else {
-      return tagCode
+      // Если не fullVueFile
+      return finalTag
     }
   })
-
-  // Копирование
-  const copyCode = async () => {
-    try {
-      await navigator.clipboard.writeText(generatedCode.value)
-      copyButtonText.value = '✅ Copied!'
-      setTimeout(() => {
-        copyButtonText.value = '📋 Copy'
-      }, 5000)
-    }
-    catch (err) {
-      console.error('Failed to copy:', err)
-    }
-  }
 
   // Freeze/unfreeze
   const toggleFreeze = () => {
@@ -504,10 +567,8 @@ ${finalScript}
   })
 
   return {
-    copyButtonText,
     isFrozen,
     toggleFreeze,
-    copyCode,
     renderedComponent,
     generatedCode,
     dynamicProps,
