@@ -1,0 +1,1 @@
+import{_ as o,c as n,a as r,o as t}from"./CXqv3HIH.js";const a={};function c(s,e){return t(),n("div",null,e[0]||(e[0]=[r("div",{id:"locale"}," key0 ",-1)]))}const _=o(a,[["render",c]]);export{_ as default};
