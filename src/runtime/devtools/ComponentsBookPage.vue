@@ -89,8 +89,6 @@
           :code="sourceCode"
           :is-frozen="false"
           :show-frozen="false"
-          copy-button-text="📋 Copy"
-          @copy="copyCode"
         />
       </PreviewSpoiler>
     </div>
@@ -106,15 +104,6 @@ const slotsData = ref('${slotsData}')
 
 const showSource = ref('${showSource}')
 const sourceCode = ref('${sourceCode}')
-
-const copyCode = async () => {
-  try {
-    await navigator.clipboard.writeText(sourceCode.value)
-  }
-  catch (err) {
-    console.error('Failed to copy:', err)
-  }
-}
 
 if (import.meta.client) {
   const observer = new MutationObserver(() => {
