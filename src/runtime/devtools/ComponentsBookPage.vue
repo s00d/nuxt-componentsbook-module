@@ -1,83 +1,145 @@
 <template>
   <div class="componentsbook-page">
+    <!-- Заголовок с именем компонента -->
     <div>
       <h1>🟢 ${name} Component</h1>
 
+      <!-- Таблица Props -->
       <div v-if="propsData.length">
         <h2>🔹 Props</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Prop</th>
-              <th>Type</th>
-              <th>Values</th>
-              <th>Required</th>
-              <th>Default Value</th>
-              <th>Description</th>
+        <table class="table">
+          <thead class="table-thead">
+            <tr class="table-header-row">
+              <th class="table-header-cell">
+                Prop
+              </th>
+              <th class="table-header-cell">
+                Type
+              </th>
+              <th class="table-header-cell">
+                Values
+              </th>
+              <th class="table-header-cell">
+                Required
+              </th>
+              <th class="table-header-cell">
+                Default Value
+              </th>
+              <th class="table-header-cell">
+                Description
+              </th>
             </tr>
           </thead>
-          <tbody>
+          <tbody class="table-body">
             <tr
               v-for="(prop, key) in propsData"
               :key="key"
+              class="table-row"
             >
-              <td><b v-text="prop.name" /></td>
-              <td v-text="prop.type ?? 'N/A'" />
-              <td v-text="prop.values ?? 'N/A'" />
-              <td v-text="prop.required ? '✅ Yes' : '❌ No'" />
-              <td v-text="prop.defaultValue ?? 'N/A'" />
-              <td v-text="prop.description ?? 'N/A'" />
+              <td class="table-cell">
+                <b v-text="prop.name" />
+              </td>
+              <td
+                class="table-cell"
+                v-text="prop.type ?? 'N/A'"
+              />
+              <td
+                class="table-cell"
+                v-text="prop.values ?? 'N/A'"
+              />
+              <td
+                class="table-cell"
+                v-text="prop.required ? '✅ Yes' : '❌ No'"
+              />
+              <td
+                class="table-cell"
+                v-text="prop.defaultValue ?? 'N/A'"
+              />
+              <td
+                class="table-cell"
+                v-text="prop.description ?? 'N/A'"
+              />
             </tr>
           </tbody>
         </table>
       </div>
 
+      <!-- Таблица Events -->
       <div v-if="eventsData.length">
         <h2>🔹 Events</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Prop</th>
-              <th>Description</th>
+        <table class="table">
+          <thead class="table-thead">
+            <tr class="table-header-row">
+              <th class="table-header-cell">
+                Prop
+              </th>
+              <th class="table-header-cell">
+                Description
+              </th>
             </tr>
           </thead>
-          <tbody>
+          <tbody class="table-body">
             <tr
               v-for="(event, key) in eventsData"
               :key="key"
+              class="table-row"
             >
-              <td><b v-text="event.name" /></td>
-              <td v-text="event.description ?? 'N/A'" />
+              <td class="table-cell">
+                <b v-text="event.name" />
+              </td>
+              <td
+                class="table-cell"
+                v-text="event.description ?? 'N/A'"
+              />
             </tr>
           </tbody>
         </table>
       </div>
 
+      <!-- Таблица Slots -->
       <div v-if="slotsData.length">
         <h2>🔹 Slots</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Slot</th>
-              <th>Description</th>
-              <th>Bindings</th>
+        <table class="table">
+          <thead class="table-thead">
+            <tr class="table-header-row">
+              <th class="table-header-cell">
+                Slot
+              </th>
+              <th class="table-header-cell">
+                Description
+              </th>
+              <th class="table-header-cell">
+                Bindings
+              </th>
             </tr>
           </thead>
-          <tbody>
+          <tbody class="table-body">
             <tr
               v-for="(slot, key) in slotsData"
               :key="key"
+              class="table-row"
             >
-              <td><b v-text="slot.name" /></td>
-              <td v-text="slot.description ?? 'N/A'" />
-              <td v-text="slot.bindings ?? 'N/A'" />
+              <td class="table-cell">
+                <b v-text="slot.name" />
+              </td>
+              <td
+                class="table-cell"
+                v-text="slot.description ?? 'N/A'"
+              />
+              <td
+                class="table-cell"
+                v-text="slot.bindings ?? 'N/A'"
+              />
             </tr>
           </tbody>
         </table>
       </div>
     </div>
+
+    <!-- Ваш компонент-демо -->
     <StoryComponent />
 
+    <!-- Спойлер с кодом (если нужно показать исходник) -->
     <div>
       <PreviewSpoiler
         v-if="showSource"
@@ -105,30 +167,41 @@ const slotsData = ref('${slotsData}')
 const showSource = ref('${showSource}')
 const sourceCode = ref('${sourceCode}')
 
+/**
+ * Пример «хака» для Nuxt DevTools (если нужно).
+ * Следите, чтобы этот код выполнялся только на клиенте,
+ * иначе будет ошибка при сборке (document не определён).
+ */
 if (import.meta.client) {
   const observer = new MutationObserver(() => {
     const devTools = document.getElementById('nuxt-devtools-container')
     if (devTools) {
       console.log('[componentsbook] Remove Nuxt DevTools from DOM')
       devTools.remove()
-      observer.disconnect() // Останавливаем наблюдение после удаления
+      observer.disconnect()
     }
   })
-
   observer.observe(document.body, { childList: true, subtree: true })
 }
 </script>
 
 <style scoped>
+/* ---------------------------------------
+   Основной контейнер страницы
+---------------------------------------- */
 .componentsbook-page {
-  padding: 20px;
-  font-family: 'Arial', sans-serif;
+  background-color: white;
+  padding: 24px;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
   line-height: 1.6;
   color: #333;
-  overflow: scroll;
+  overflow-y: auto;
   height: 100%;
   min-width: 800px;
   margin: 0 auto;
+  box-sizing: border-box;
+  border-radius: 6px;
+  border: 1px dashed #ccc;
 }
 
 /* Заголовки */
@@ -138,151 +211,92 @@ if (import.meta.client) {
 .componentsbook-page h4,
 .componentsbook-page h5,
 .componentsbook-page h6 {
-  font-weight: bold;
+  font-weight: 600;
   margin-bottom: 1rem;
+  color: #222;
+  -webkit-font-smoothing: antialiased;
 }
 
 .componentsbook-page h1 {
-  font-size: 2rem;
+  font-size: 1.8rem;
   border-bottom: 2px solid #ddd;
   padding-bottom: 0.3rem;
 }
-
 .componentsbook-page h2 {
-  font-size: 1.75rem;
-  border-bottom: 1px solid #ddd;
+  font-size: 1.5rem;
+  border-bottom: 1px solid #eee;
   padding-bottom: 0.2rem;
 }
+/* Можно добавить стили для h3-h6 при необходимости */
 
-.componentsbook-page h3 {
-  font-size: 1.5rem;
-}
-
-.componentsbook-page h4 {
-  font-size: 1.25rem;
-}
-
-.componentsbook-page h5,
-.componentsbook-page h6 {
-  font-size: 1rem;
-}
-
-/* Текст */
-.componentsbook-page p {
-  margin-bottom: 1rem;
-  font-size: 1rem;
-  color: #444;
-}
-
-/* Списки */
-.componentsbook-page ul,
-.componentsbook-page ol {
-  margin-left: 20px;
-}
-
-.componentsbook-page ul {
-  list-style-type: disc;
-}
-
-.componentsbook-page ol {
-  list-style-type: decimal;
-}
-
-.componentsbook-page ul li,
-.componentsbook-page ol li {
-  margin-bottom: 0.5rem;
-}
-
-/* Ссылки */
-.componentsbook-page a {
-  color: #007bff;
-  text-decoration: none;
-  font-weight: bold;
-}
-
-.componentsbook-page a:hover {
-  text-decoration: underline;
-}
-
-/* Светлая тема для блока кода */
-.componentsbook-page pre {
-  background: #2d2d2d;
-  color: #f8f8f2;
-  padding: 15px;
-  border-radius: 5px;
-  overflow-x: auto;
-  font-size: 14px;
-  border: 1px solid #444;
-  font-family: 'Courier New', monospace;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-}
-
-.componentsbook-page pre code {
-  display: block;
-  padding: 0;
-  margin: 0;
-}
-
-.componentsbook-page pre code {
-  font-family: 'Courier New', monospace;
-}
-
-/* Инлайн-код */
-.componentsbook-page code {
-  color: #eee;
-  padding: 2px 4px;
-  border-radius: 4px;
-  font-family: 'Courier New', monospace;
-  font-size: 14px;
-}
-
-/* Блок-цитаты */
-.componentsbook-page blockquote {
-  border-left: 4px solid #ccc;
-  padding: 0.5rem 1rem;
-  margin: 1rem 0;
-  color: #666;
-  background: #f9f9f9;
-  font-style: italic;
-}
-
-/* Таблицы */
-.componentsbook-page table {
+/* ---------------------------------------
+   Стили для «карточных» таблиц
+   с использованием КЛАССОВ
+---------------------------------------- */
+.table {
   width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 1rem;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-bottom: 1.5rem;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  overflow: hidden;
 }
 
-.componentsbook-page th,
-.componentsbook-page td {
-  border: 1px solid #ddd;
-  padding: 10px;
+/* Шапка (thead) */
+.table-thead {
+  background-color: #f4f4f4;
+}
+
+/* Строка в шапке */
+.table-header-row {
+  border-bottom: 1px solid #ddd;
+}
+
+/* Ячейка в шапке */
+.table-header-cell {
+  padding: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
   text-align: left;
+  color: #444;
+  border-bottom: 1px solid #ddd;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.componentsbook-page th {
-  background: #f4f4f4;
-  font-weight: bold;
+/* Тело (tbody) */
+.table-body {
+  /* Можно добавить свои стили, если нужно */
 }
 
-/* Спойлер с кодом */
-.code-spoiler {
-  margin-top: 20px;
-  margin-bottom: 20px;
-  background: #f9f9f9;
-  padding: 10px;
-  border-radius: 5px;
-  border: 1px solid #ddd;
+/* Строка в теле */
+.table-row {
+  border-bottom: 1px solid #eee;
 }
 
-.code-spoiler summary {
-  cursor: pointer;
-  font-weight: bold;
-  color: #007bff;
+/* Ячейка в теле */
+.table-cell {
+  padding: 12px;
+  font-size: 0.95rem;
+  color: #333;
+  vertical-align: top;
+  line-height: 1.4;
 }
 
-.code-spoiler summary:hover {
-  text-decoration: underline;
+/* «Зебра»-эффект (опционально) */
+.table-body .table-row:nth-child(even) {
+  background-color: #fcfcfc;
+}
+
+/* Hover-эффект строки (опционально) */
+.table-body .table-row:hover {
+  background-color: #f9fafb;
+}
+
+/* Убираем нижнюю границу у последней строки */
+.table-row:last-child {
+  border-bottom: none;
 }
 </style>
