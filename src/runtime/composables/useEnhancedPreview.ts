@@ -178,7 +178,6 @@ export function useEnhancedPreview(
   emit: (event: string, ...args: unknown[]) => void,
   options: CodeGenOptions = {},
 ) {
-  console.log(111, props);
   const {
     fullVueFile = false,
     kebabCase = true,
