@@ -2,11 +2,11 @@
   <div
     ref="spoilerHeader"
     class="spoiler-header"
+    @click.prevent="toggle"
   >
     <a
       class="toggle-link"
       href="#"
-      @click.prevent="toggle"
     >
       {{ show ? hideLabel : showLabel }}
     </a>
@@ -37,8 +37,6 @@ defineProps({
 defineEmits(['toggle'])
 
 const show = ref(false)
-
-// Ссылка на заголовок
 const spoilerHeader = ref<HTMLElement | null>(null)
 
 function toggle() {
@@ -57,29 +55,44 @@ function toggle() {
 <style scoped>
 .spoiler-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 10px;
-  margin-top: 16px;
-  border-top: 1px solid #ddd;
-  background: #f1f1f1;
+  justify-content: flex-start;
+  gap: 8px;
+  background: #f8f8f8;
+  border: 1px solid #e0e0e0;
   border-radius: 6px;
+  padding: 12px 16px;
+  margin-top: 16px;
+  cursor: pointer; /* Чтобы при наведении на шапку показывался «рука» */
+  transition: background-color 0.2s ease-in-out; /* Плавная смена фона */
 }
 
+/* Эффект наведения для всей «шапки» спойлера */
+.spoiler-header:hover {
+  background-color: #e6f2ff;
+}
+
+/* Сама ссылка, без эффекта hover */
 .toggle-link {
   text-decoration: none;
-  font-size: 14px;
-  cursor: pointer;
-  font-weight: bold;
+  font-weight: 500;
   color: #007bff;
-  transition: color 0.2s ease-in-out;
+  font-size: 14px;
+  border-radius: 4px;
+  padding: 2px 4px;
 }
 
+/* Убираем hover-эффект у ссылки, чтобы он не перебивал общий hover */
 .toggle-link:hover {
-  color: #0056b3;
+  /* Пусто или закомментировано – эффекта здесь не будет */
 }
 
+/* Содержимое, показывающееся после клика */
 .spoiler-content {
   margin-top: 8px;
+  padding: 12px 16px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
 }
 </style>
