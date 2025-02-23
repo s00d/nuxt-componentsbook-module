@@ -15,9 +15,7 @@
         :code="generatedCode"
         :show-frozen="true"
         :is-frozen="isFrozen"
-        :copy-button-text="copyButtonText"
         @toggle-freeze="toggleFreeze"
-        @copy="copyCode"
       />
     </PreviewSpoiler>
   </section>
@@ -70,10 +68,8 @@ const emit = defineEmits(['update:modelValue'])
  *   - и т.д.
  */
 const {
-  copyButtonText,
   isFrozen,
   toggleFreeze,
-  copyCode,
   renderedComponent,
   generatedCode,
 } = useEnhancedPreview(
