@@ -16,10 +16,8 @@ const handleInput = () => {
 const emit = defineEmits(['update:modelValue'])
 
 const {
-  copyButtonText,
   isFrozen,
   toggleFreeze,
-  copyCode,
   renderedComponent,
   generatedCode,
 } = useEnhancedPreview(reactive({
@@ -35,10 +33,8 @@ const {
 }), emit as (event: string, ...args: unknown[]) => void)
 
 const {
-  copyButtonText: copyButtonTextCustomBadge,
   isFrozen: isFrozenCustomBadge,
   toggleFreeze: toggleFreezeCustomBadge,
-  copyCode: copyCodeCustomBadge,
   renderedComponent: renderedComponentCustomBadge,
   generatedCode: generatedCodeCustomBadge,
 } = useEnhancedPreview(reactive({
@@ -62,9 +58,7 @@ const {
       :code="generatedCode"
       :show-frozen="true"
       :is-frozen="isFrozen"
-      :copy-button-text="copyButtonText"
       @toggle-freeze="toggleFreeze"
-      @copy="copyCode"
     />
   </PreviewSpoiler>
 
@@ -78,9 +72,7 @@ const {
       :code="generatedCodeCustomBadge"
       :show-frozen="true"
       :is-frozen="isFrozenCustomBadge"
-      :copy-button-text="copyButtonTextCustomBadge"
       @toggle-freeze="toggleFreezeCustomBadge"
-      @copy="copyCodeCustomBadge"
     />
   </PreviewSpoiler>
 </template>
