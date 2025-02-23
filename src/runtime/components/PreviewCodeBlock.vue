@@ -55,6 +55,7 @@ async function copyCode() {
     console.error('Failed to copy:', err)
   }
 }
+
 function removeLeadingIndent(str: string): string {
   const lines = str.split('\n')
   let minIndent = Infinity
@@ -73,7 +74,9 @@ function removeLeadingIndent(str: string): string {
   }
   if (minIndent === Infinity) return str
 
-  return lines.map(line => !line.trim() ? '' : line.slice(minIndent)).join('\n')
+  return lines
+    .map(line => (!line.trim() ? '' : line.slice(minIndent)))
+    .join('\n')
 }
 
 watchEffect(async () => {
@@ -94,58 +97,69 @@ watchEffect(async () => {
 </script>
 
 <style scoped>
+/*
+  Основной контейнер для кода.
+  Используем тёмный фон, небольшую тень и закруглённые углы.
+*/
 .code-container {
-  /* Примерно светлый фон */
   background: #2f3136;
   color: #ccc;
-
   position: relative;
   border-radius: 6px;
-  padding: 12px;
+  padding: 16px;
   margin-top: 8px;
   overflow: auto;
-  border: 1px solid #ccc;
+  border: 1px solid #444;
+  /* Лёгкая тень для «карточного» вида */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+  font-family: 'Fira Code', 'Courier New', monospace; /* Пример шрифта */
 }
 
+/* Блок с подсвеченным кодом */
 .enhanced-preview__code {
-  /* Поскольку используем highlight.js, пусть сам выставляет нужный display,
-     но убираем лишние отступы. */
-  font-family: monospace;
-  font-size: 14px;
+  /* Убираем лишние отступы, задаём перенос, если строка длинная */
   margin-top: 16px;
-  white-space: pre-wrap; /* перенос длинных строк */
+  font-size: 14px;
+  white-space: pre-wrap;
   word-wrap: break-word;
 }
 
-/* Переопределяем потенциальные padding у .hljs */
+/* Переопределяем потенциальные padding и margin внутри hljs */
 .enhanced-preview__code .hljs {
   padding: 0 !important;
   margin: 0 !important;
 }
 
+/* Кнопки (copy & freeze) */
 .freeze-link,
 .copy-link {
   position: absolute;
-  top: 10px;
-  font-size: 12px;
-  padding: 4px 8px;
+  top: 16px;
+  padding: 4px 10px;
   border-radius: 4px;
   text-decoration: none;
-  font-weight: bold;
-  color: #a5d6ff;
-  transition: color 0.2s ease-in-out;
+  font-weight: 500;
+  font-size: 12px;
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+  /* Фон и цвет текста можно адаптировать под свою палитру */
+  background-color: #3b82f6; /* Пример: оттенок синего */
+  color: #fff;
 }
 
-.freeze-link:hover,
-.copy-link:hover {
-  color: #007bff;
-}
-
+/* Кнопка «Copy» правее */
 .copy-link {
-  right: 10px;
+  right: 16px;
 }
 
+/* Кнопка «Freeze» левее */
 .freeze-link {
-  right: 80px;
+  right: 96px;
+}
+
+/* Hover-состояние кнопок */
+.copy-link:hover,
+.freeze-link:hover {
+  background-color: #1e40af; /* Потемнее синий */
+  color: #fff;
 }
 </style>
